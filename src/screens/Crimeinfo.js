@@ -27,6 +27,7 @@ class Crimeinfo extends Component {
     }
 
     async componentDidMount() {
+        StatusBar.setBackgroundColor('#333846', true)
         await Font.loadAsync({
             'ralewayRegular': require('../assets/fonts/Raleway-Regular.ttf'),
         });
