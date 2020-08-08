@@ -9,7 +9,7 @@ import Constants from 'expo-constants';
 export default function App() {
   return (
     <Fragment>
-      <View style={{ backgroundColor: "#333846" }}>
+      <View style={styles.statusBar}>
         <StatusBar
           backgroundColor="#333846"
           barStyle="light-content"
@@ -27,9 +27,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#333846',
     justifyContent: 'center',
+    // paddingTop: Constants.statusBarHeight,
   },
   statusBar: {
-    backgroundColor: "#2e363d",
-    // paddingTop: Constants.statusBarHeight,
+    backgroundColor: "#333846",
+
   },
 });

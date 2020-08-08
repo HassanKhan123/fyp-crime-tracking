@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "CITIZEN",
-    "slug": "FYP",
+    "slug": "Citizen",
     "privacy": "public",
     "sdkVersion": "35.0.0",
     "platforms": [
@@ -9,12 +9,22 @@
       "android",
       "web"
     ],
+    "android": {
+      "package": "com.Paracha.Citizen",
+      "versionCode": 1,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyATREe5fBzmZvuDNcCHVr3_ue2gZ5dwbSU"
+        }
+      }
+    },
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/deer.png",
     "splash": {
       "image": "./assets/company.png",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "resizeMode": "cover"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
