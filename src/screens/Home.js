@@ -628,7 +628,18 @@ class HomeScreen extends Component {
                                     fetchDetails={true}
                                     listViewDisplayed={false}
                                     returnKeyType={'search'}
-                                    onPress={async (data, details = null) => { // 'details' is provided when fetchDetails = true
+                                    query={{
+                                        // available options: https://developers.google.com/places/web-service/autocomplete
+
+                                        // key: 'AIzaSyAGF8cAOPFPIKCZYqxuibF9xx5XD4JBb84',
+                                        key: 'AIzaSyBVFhY3cURPTbAoOnkyAeijkAt2kqRJ2iY',
+                                        language: 'en', // language of the results type: '(cities,regions)'
+                                        types: '',
+                                        components: 'country:pk'
+                                        // default: 'geocode'
+                                    }}
+
+                                    onPress={async (data, details) => { // 'details' is provided when fetchDetails = true
                                         this.locationPosition.remove();
                                         // //('data--->', data)
                                         // //('Details--->', details.address_components[0].short_name)
@@ -648,16 +659,6 @@ class HomeScreen extends Component {
                                         });
                                     }}
                                     getDefaultValue={() => ''}
-                                    query={{
-                                        // available options: https://developers.google.com/places/web-service/autocomplete
-
-                                        // key: 'AIzaSyAGF8cAOPFPIKCZYqxuibF9xx5XD4JBb84',
-                                        key: 'AIzaSyBIzRjgBQhuL_0rc8wrofFsSR0leEMyD6w',
-                                        language: 'en', // language of the results type: '(cities,regions)'
-                                        types: '',
-                                        components: 'country:pk'
-                                        // default: 'geocode'
-                                    }}
 
                                     styles={{
                                         textInputContainer: {
