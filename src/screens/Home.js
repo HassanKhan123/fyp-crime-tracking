@@ -19,17 +19,17 @@ import * as firebase from 'firebase';
 // import Modal from "react-native-modal";
 
 
-// import { YellowBox } from 'react-native';
-// import _ from 'lodash';
+import { YellowBox } from 'react-native';
+import _ from 'lodash';
 
 
-// YellowBox.ignoreWarnings(["Warning: google places autocomplete"]);
-// const _console = _.clone(console);
-// console.warn = message => {
-//     if (message.indexOf('google places autocomplete') <= -1) {
-//         _console.warn(message);
-//     }
-// };
+YellowBox.ignoreWarnings(["Warning: google places autocomplete"]);
+const _console = _.clone(console);
+console.warn = message => {
+    if (message.indexOf('google places autocomplete') <= -1) {
+        _console.warn(message);
+    }
+};
 
 
 const screen = Dimensions.get('window');
@@ -228,7 +228,7 @@ class HomeScreen extends Component {
             location: null,
             region: null,
             errorMessage: null,
-            regionName: '',
+            regionName: [],
             expoToken: '',
             fontLoaded: false,
             visible: false,
@@ -408,6 +408,7 @@ class HomeScreen extends Component {
                 let alertdata = snapshot.val()
                 if (alertdata) {
                     // console.log('new record2', alertdata);
+                    console.log(alertdata)
                     for (let loop in alertdata) {
                         if (alertdata[loop].regionName) {
                             locationcoords.push(alertdata[loop].regionName[0])
@@ -471,15 +472,18 @@ class HomeScreen extends Component {
             for (var key in AlertData) {
                 //('---->', AlertData[key].location)
                 //  //('lat---->' , AlertData[key].location.marker_lat)
-                let latitude = AlertData[key].location.marker_lat
-                let longitude = AlertData[key].location.marker_long
+                if(AlertData[key].location.marker_lat && AlertData[key].location.marker_long){
 
-                coordinates = {
-                    latitude: latitude,
-                    longitude: longitude
+                    let latitude = AlertData[key].location.marker_lat
+                    let longitude = AlertData[key].location.marker_long
+                    
+                    coordinates = {
+                        latitude: latitude,
+                        longitude: longitude
+                    }
+                    AlertArr.push({ coordinates })
+                    placemarkers.push(coordinates)
                 }
-                AlertArr.push({ coordinates })
-                placemarkers.push(coordinates)
 
             }
         }).then(() => {
@@ -736,9 +740,9 @@ class HomeScreen extends Component {
                                         </Text>
                                     </View>
                                     <View style={{ flex: 5, fontFamily: 'ralewayRegular', }}>
-                                        {this.state.regionName[0].street ?
+                                        {this.state.regionName.length > 0 && this.state.regionName[0].street !== undefined && this.state.regionName[0].name ?
                                             <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street}</Text> :
-                                            <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].name}</Text>}
+                                            <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street}</Text>}
                                         <Text style={{ color: '#5d616f', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].city + ',' + this.state.regionName[0].country}</Text>
                                         <Text style={{ color: '#5d616f', letterSpacing: 1, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].region + ','}</Text>
                                         {/* <Text style={{color:'#5d616f',letterSpacing : 1, fontFamily: 'ralewayRegular' , fontSize : 14 , textTransform: 'capitalize'}}>latitude: {this.state.marker_lat}</Text>

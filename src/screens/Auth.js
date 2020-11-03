@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Image, StyleSheet, Button, Text, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Image, StyleSheet, Button, Text, TouchableOpacity, ImageBackground,ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialIcons, EvilIcons } from '@expo/vector-icons';
 import fire from '../config/firebase';
 import * as Facebook from 'expo-facebook';
@@ -24,15 +24,18 @@ class AuthScreen extends Component {
     }
     constructor(props) {
         super(props);
-        this.state = { userName: '', UserId: '', ProfileURL: '', fontLoaded: false, picture: '' };
+        this.state = { userName: '', UserId: '', ProfileURL: '', fontLoaded: false, picture: '',loading:true };
     }
 
 
     async componentDidMount() {
         firebase.auth().onAuthStateChanged((user) => {
+            console.log("user===========",user)
             if (user != null) {
-
-
+                this.setState({loading:false})
+                this.props.navigation.navigate('Home', { userId: user.uid, Name: user.displayName});
+            }else{
+                this.setState({loading:false})
             }
         });
 
@@ -45,12 +48,18 @@ class AuthScreen extends Component {
     }
 
     async loginWithFacebook() {
-        const { userName, UserUid, ProfileURL } = this.state;
-
-        const { type, token } = await Facebook.logInWithReadPermissionsAsync(
-            '510422783039703',
-            { permissions: ['public_profile'] }
-        );
+        await Facebook.initializeAsync('925470951182049');
+      const {
+        type,
+        token,
+        expires,
+        permissions,
+        declinedPermissions,
+      } = await Facebook.logInWithReadPermissionsAsync({
+        permissions: ['public_profile','email'],
+      });
+        
+        
 
         if (type === 'success') {
             // Build Firebase credential with the Facebook access token.
@@ -104,7 +113,7 @@ class AuthScreen extends Component {
 
 
     render() {
-        console.log('GraphURL--->', this.state.picture)
+        const {loading} = this.state
         return this.state.fontLoaded ? (
             <ImageBackground source={require('../assets/images/map.jpg')} style={styles.backgroundImg} imageStyle={{ opacity: 0.1 }}>
                 <View style={styles.container}>
@@ -125,22 +134,15 @@ class AuthScreen extends Component {
                     </View>
 
                     <View style={{ flex: 2, flexDirection: 'column', justifyContent: 'space-evenly', alignContent: 'center' }}>
-                        <TouchableOpacity style={{ backgroundColor: '#2e363d', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', color: 'white', fontSize: 18, padding: 15, width: 250, textAlign: 'çenter' }}
+                     {loading ? <ActivityIndicator /> :   <TouchableOpacity style={{ backgroundColor: '#2e363d', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', color: 'white', fontSize: 18, padding: 15, width: 250, textAlign: 'çenter' }}
                             onPress={() => this.loginWithFacebook()}
                         >
                             <EvilIcons name="sc-facebook" size={25} color="white" />
                             <Text style={{ color: 'white', marginLeft: 5, fontFamily: 'ralewayRegular', fontSize: 18, textAlign: 'center' }}>Login with Facebook</Text>
 
-                        </TouchableOpacity>
+                        </TouchableOpacity> }
 
-                        <TouchableOpacity style={{ backgroundColor: '#2e363d', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', color: 'white', fontSize: 18, padding: 15, width: 250, textAlign: 'çenter' }}
-
-                        >
-                            <EvilIcons name="sc-google-plus" size={25} color="white" />
-                            <Text style={{ color: 'white', marginLeft: 5, fontSize: 18, fontFamily: 'ralewayRegular', textAlign: 'center' }}>Login with Google</Text>
-
-
-                        </TouchableOpacity>
+                      
                     </View>
                 </View>
             </ImageBackground>
