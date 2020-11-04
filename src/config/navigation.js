@@ -48,6 +48,7 @@ const CustomDrawerContentComponent = (props) => (
 )
 
 const MyDrawerNavigator = createDrawerNavigator({
+    Home: { screen: HomeScreen },
     crimeInfo: {
         screen: CrimeInfoScreen,
     },
@@ -142,7 +143,7 @@ let CollapseExpand = (index, position) => {
 const HomeNavigation = createStackNavigator(
     {
         Auth: { screen: AuthScreen },
-        Home: { screen: HomeScreen },
+        // Home: { screen: HomeScreen },
         CrimeInfo: { screen: MyDrawerNavigator },
     },
     {

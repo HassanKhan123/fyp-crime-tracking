@@ -12,10 +12,8 @@ import fire from '../config/firebase';
 
 class Crimeinfo extends Component {
     static navigationOptions = {
-        header: null,
-        drawerLabel: 'Home',
-        drawerIcon: ({ tintColor }) => <MaterialIcons name="home" size={24} color={tintColor} />
-    };
+        drawerLabel: () => null
+    }
     constructor(props) {
         super(props);
         this.state = { chosenDate: new Date(), text: '', description: '', fontLoaded: false, userId: '' };

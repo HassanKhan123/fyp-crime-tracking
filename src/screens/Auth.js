@@ -36,7 +36,7 @@ class AuthScreen extends Component {
                     let snapShot = snapshot.val();
                     console.log(snapShot)
                     // console.log(user)
-                    this.props.navigation.navigate('Home', { userId: user.uid, Name: snapShot.userName, userProfile: snapShot.ProfileURL, UserToken: snapShot.userToken, deviceinfo: snapShot.deviceInfo });
+                    this.props.navigation.navigate('CrimeInfo', { userId: user.uid, Name: snapShot.userName, userProfile: snapShot.ProfileURL, UserToken: snapShot.userToken, deviceinfo: snapShot.deviceInfo });
                 })
             }else{
                 this.setState({loading:false})
