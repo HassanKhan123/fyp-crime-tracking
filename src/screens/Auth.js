@@ -24,7 +24,7 @@ class AuthScreen extends Component {
     }
     constructor(props) {
         super(props);
-        this.state = { userName: '', UserId: '', ProfileURL: '', fontLoaded: false, picture: '',loading:true };
+        this.state = { userName: '', UserId: '', ProfileURL: '', fontLoaded: false, picture: '',loading:true,userToken:'',deviceInfo:'' };
     }
 
 
@@ -32,7 +32,12 @@ class AuthScreen extends Component {
         firebase.auth().onAuthStateChanged((user) => {
             if (user != null) {
                 this.setState({loading:false})
-                this.props.navigation.navigate('Home', { userId: user.uid, Name: user.displayName});
+                fire.database().ref('Users/' + user.uid).once('value',  (snapshot) => {
+                    let snapShot = snapshot.val();
+                    console.log(snapShot)
+                    // console.log(user)
+                    this.props.navigation.navigate('Home', { userId: user.uid, Name: snapShot.userName, userProfile: snapShot.ProfileURL, UserToken: snapShot.userToken, deviceinfo: snapShot.deviceInfo });
+                })
             }else{
                 this.setState({loading:false})
             }
@@ -64,49 +69,43 @@ class AuthScreen extends Component {
             // Build Firebase credential with the Facebook access token.
             const credential = firebase.auth.FacebookAuthProvider.credential(token);
             const response = await fetch(
-                `https://graph.facebook.com/me?access_token=${token}&fields=id,name,birthday,picture.type(large)`
+                `https://graph.facebook.com/me?access_token=${token}&fields=id,name,picture.type(large)`
             );
             const userInfo = await response.json();
-            //   console.log('--->',userInfo)
 
-            //   console.log('--->',userInfo.picture.data.url)
-            // Sign in with credential from the Facebook user.
             firebase.auth().signInWithCredential(credential).then((res) => {
-                // this.props.navigation.navigate('MainScreen')
-                // console.log('res.user.stsTokenManager--->', res.user.stsTokenManager)
-                // console.log('res.user---->', res.user)
-
-                const userName = res.user.displayName;
+                
+                const userName = res.additionalUserInfo.profile.name ;
                 const UserUid = res.user.uid;
-                const ProfileURL = userInfo.picture.data.url;
-                const Birthday = userInfo.birthday
-                console.log('PROFILEURL=---->', ProfileURL)
-                const deviceInfo = Constants.deviceName
+                const ProfileURL = `${res.user.photoURL}?type=large`;
+               
+                const deviceInfo = Constants.deviceName;
                 fire.database().ref('Users/' + UserUid).update({
                     userName,
-                    UserUid,
+                    UserId:UserUid,
                     ProfileURL,
+                    userToken:token, deviceInfo
                 })
                     .then(() => {
                         fire.database().ref('Users/' + UserUid + '/' + 'devices/' + deviceInfo).set({ deviceInfo, token }).then(() => {
                             console.log("Your profile has been created");
-                            this.props.navigation.navigate('Home', { userId: UserUid, Birthday: Birthday, Name: userName, userProfile: ProfileURL, UserToken: token, deviceinfo: deviceInfo });
+                            this.props.navigation.navigate('Home', { userId: UserUid, Name: userName, userProfile: ProfileURL, UserToken: token, deviceinfo: deviceInfo });
                         }).catch((e) => {
                             var errorMessage = error.message;
                             console.log(errorMessage);
                         })
                     })
                     .catch(function (error) {
-                        // Handle Errors here.
+                      
                         var errorCode = error.code;
                         var errorMessage = error.message;
                         console.log(errorMessage);
-                        // ...
+                       
                     });
 
             });
 
-            // this.props.navigation.navigate('MainScreen')
+           
         }
     }
 

@@ -284,20 +284,22 @@ class HomeScreen extends Component {
         // Get the token that uniquely identifies this device
         let token = await Notifications.getExpoPushTokenAsync();
         let deviceName = this.state.deviceInfo
-        let alltokens = {
-            [deviceName]: token
-        }
+        // let alltokens = {
+        //     [deviceName]: token
+        // }
+        let alltokens = [token];
+        
         //('toooken****', token)
         fire.database().ref(`Users/${this.state.UserId}/devices/${this.state.deviceInfo}`).update({ expoToken: token }).then(() => {
 
-            fire.database().ref('ExpoNotifyTokens/').set(alltokens).then(() => {
+            fire.database().ref('ExpoNotifyTokens/'+this.state.UserId).set(alltokens).then(() => {
                 //("Success!!")
             })
         })
         this.setState({ expoToken: token })
     }
     async componentDidMount() {
-        await this.registerForPushNotificationAsync();
+       
         this.animation.play();
         setTimeout(() => {
             this.setState({
@@ -317,16 +319,19 @@ class HomeScreen extends Component {
         await Font.loadAsync({
             'ralewayRegular': require('../assets/fonts/Raleway-Regular.ttf'),
         });
+        
 
+        const userName = this.props.navigation.state.params.Name
+        const UserId = this.props.navigation.state.params.userId
+        const ProfileURL = this.props.navigation.state.params.userProfile
+        const UserToken = this.props.navigation.state.params.UserToken
+        const deviceInfo = this.props.navigation.state.params.deviceinfo
 
-        const userName = this.props.navigation.getParam('Name', 'NO-ID')
-        const UserId = this.props.navigation.getParam('userId', 'NO-ID')
-        const ProfileURL = this.props.navigation.getParam('userProfile', 'NO-ID')
-        const UserToken = this.props.navigation.getParam('UserToken', 'NO-ID')
-        const deviceInfo = this.props.navigation.getParam('deviceinfo', 'NO-ID')
+        console.log("===",userName,UserToken,deviceInfo)
 
 
         this.setState({ fontLoaded: true, userName, UserId, ProfileURL, UserToken, deviceInfo });
+        await this.registerForPushNotificationAsync();
     }
 
    
@@ -340,7 +345,6 @@ class HomeScreen extends Component {
         }
 
         let location = await Location.getCurrentPositionAsync({});
-        console.log(location)
         const region = {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
@@ -348,8 +352,6 @@ class HomeScreen extends Component {
             longitudeDelta: 0.0922 * ASPECT_RATIO
         }
         let regionName = await Location.reverseGeocodeAsync({ longitude: location.coords.longitude, latitude: location.coords.latitude });
-        console.log(regionName)
-
 
         this.setState({ location, region, marker_lat: location.coords.latitude, marker_long:  location.coords.longitude, regionName });
 
@@ -393,16 +395,17 @@ class HomeScreen extends Component {
         let locationcountry;
         let locationregion;
         fire.database().ref('ExpoNotifyTokens/').once("value", function (data) {
-            //('---->', data.val())
+           
             let tokenData = data.val()
             for (var key in tokenData) {
-                //    if(tokenData[key] !== this.state.expoToken)
+                console.log(tokenData)
+               
 
                 TokenArr.push(tokenData[key])
 
             }
         }).then(() => {
-            console.log('TokenArr--->', TokenArr)
+            // console.log('TokenArr--->', TokenArr)
             fire.database().ref('allAlerts').orderByKey().limitToLast(1).on('child_added', (snapshot) => {
 
                 let alertdata = snapshot.val()
@@ -519,7 +522,7 @@ class HomeScreen extends Component {
                 // allkey = response.key
 
                 //("Rob information has been created");
-                this.setState({ userKey: userkey, allKey: allkey })
+                this.setState({ userKey: userkey})
                 this.sendNotification()
 
             })
@@ -623,7 +626,7 @@ class HomeScreen extends Component {
                                 </TouchableOpacity>
 
                             </View>}
-                            {this.state.isModalVisible && <View style={{ position: 'absolute', top: 28, left: 27, width: '85%' }}>
+                           {/* this.state.isModalVisible && <View style={{ position: 'absolute', top: 28, left: 27, width: '85%' }}>
                                 <GooglePlacesAutocomplete
                                     placeholder='Search Location...'
                                     minLength={2}
@@ -635,8 +638,8 @@ class HomeScreen extends Component {
                                     query={{
                                         // available options: https://developers.google.com/places/web-service/autocomplete
 
-                                        // key: 'AIzaSyAGF8cAOPFPIKCZYqxuibF9xx5XD4JBb84',
-                                        key: 'AIzaSyBVFhY3cURPTbAoOnkyAeijkAt2kqRJ2iY',
+                                        key: 'AIzaSyAGF8cAOPFPIKCZYqxuibF9xx5XD4JBb84',
+                                        // key: 'AIzaSyBVFhY3cURPTbAoOnkyAeijkAt2kqRJ2iY',
                                         language: 'en', // language of the results type: '(cities,regions)'
                                         types: '',
                                         components: 'country:pk'
@@ -730,7 +733,7 @@ class HomeScreen extends Component {
                                     renderLeftButton={() => <MaterialIcons style={{ paddingTop: 15 }} name="my-location" size={20} color="white" />}
                                 />
 
-                            </View>}
+                                </View> */ } 
                             {this.state.isModalVisible && <View style={{ position: 'absolute', bottom: 26, left: 27, width: '85%', backgroundColor: '#333846', padding: 18, elevation: 1 }}>
 
                                 <View style={{ flexDirection: 'row', }}>
@@ -740,7 +743,7 @@ class HomeScreen extends Component {
                                         </Text>
                                     </View>
                                     <View style={{ flex: 5, fontFamily: 'ralewayRegular', }}>
-                                        {this.state.regionName.length > 0 && this.state.regionName[0] !== undefined && this.state.regionName[0].street && this.state.regionName[0].name ?
+                                        {this.state.regionName && this.state.regionName.length > 0 && this.state.regionName[0] !== undefined && this.state.regionName[0].street && this.state.regionName[0].name ?
                                             <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street || this.state.regionName[0].name}</Text> :
                                             <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street || this.state.regionName[0].name}</Text>}
                                         <Text style={{ color: '#5d616f', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].city + ',' + this.state.regionName[0].country}</Text>

@@ -69,18 +69,18 @@ class Crimeinfo extends Component {
                 this.setState({ description: '', userId })
             });
         });
-        this.props.navigation.navigate('Home',{
+        this.props.navigation.navigate('UserRobHistory',{
             userId, Name: userName, userProfile: userProfile, UserToken: userToken,
             deviceinfo: deviceInfo, userkey, allKey: allKey
         })
     }
 
-    goToHistory = () => {
-        this.props.navigation.navigate('UserRobHistory', {
-            userId: this.state.userId, Name: this.state.userName, userProfile: this.state.ProfileURL, UserToken: this.state.UserToken,
-            deviceinfo: this.state.deviceInfo, userkey: this.state.userKey, allKey
-        });
-    }
+    // goToHistory = () => {
+    //     this.props.navigation.navigate('UserRobHistory', {
+    //         userId: this.state.userId, Name: this.state.userName, userProfile: this.state.ProfileURL, UserToken: this.state.UserToken,
+    //         deviceinfo: this.state.deviceInfo, userkey: this.state.userKey, allKey
+    //     });
+    // }
 
     render() {
         return this.state.fontLoaded ? (
@@ -122,7 +122,7 @@ class Crimeinfo extends Component {
                                                 </View>
                                                 <View style={{ borderBottomColor: '#333846', color: '#f2f3f5', backgroundColor: '#f2f3f5', borderBottomWidth: 1, marginBottom: 10, paddingTop: 8, paddingBottom: 8, fontFamily: 'ralewayRegular' }}>
                                                     <DatePicker
-                                                        defaultDate={new Date(2020, 1, 1)}
+                                                        defaultDate={new Date()}
                                                         minimumDate={new Date(2018, 1, 1)}
                                                         maximumDate={new Date(2050, 12, 30)}
                                                         locale={"en"}
