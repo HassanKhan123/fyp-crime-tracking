@@ -31,13 +31,16 @@ class AuthScreen extends Component {
     async componentDidMount() {
         firebase.auth().onAuthStateChanged((user) => {
             if (user != null) {
-                this.setState({loading:false})
+                
                 fire.database().ref('Users/' + user.uid).once('value',  (snapshot) => {
                     let snapShot = snapshot.val();
                     console.log(snapShot)
                     // console.log(user)
+                    
                     this.props.navigation.navigate('CrimeInfo', { userId: user.uid, Name: snapShot.userName, userProfile: snapShot.ProfileURL, UserToken: snapShot.userToken, deviceinfo: snapShot.deviceInfo });
+                    this.setState({loading:false})
                 })
+               
             }else{
                 this.setState({loading:false})
             }
@@ -52,6 +55,7 @@ class AuthScreen extends Component {
     }
 
     async loginWithFacebook() {
+        this.setState({loading:true})
         await Facebook.initializeAsync('925470951182049');
       const {
         type,
@@ -88,11 +92,13 @@ class AuthScreen extends Component {
                 })
                     .then(() => {
                         fire.database().ref('Users/' + UserUid + '/' + 'devices/' + deviceInfo).set({ deviceInfo, token }).then(() => {
-                            console.log("Your profile has been created");
+                            
                             this.props.navigation.navigate('Home', { userId: UserUid, Name: userName, userProfile: ProfileURL, UserToken: token, deviceinfo: deviceInfo });
+                            this.setState({loading:false})
                         }).catch((e) => {
                             var errorMessage = error.message;
                             console.log(errorMessage);
+                            this.setState({loading:false})
                         })
                     })
                     .catch(function (error) {
@@ -100,6 +106,7 @@ class AuthScreen extends Component {
                         var errorCode = error.code;
                         var errorMessage = error.message;
                         console.log(errorMessage);
+                        this.setState({loading:false})
                        
                     });
 
