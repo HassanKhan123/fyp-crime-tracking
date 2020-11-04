@@ -207,15 +207,17 @@ class chatScreen extends Component {
     }
 
     fetchData() {
-        const userId = this.props.navigation.getParam('userId', 'NO-ID')
-        const chabi = this.props.navigation.getParam('chabi', 'NO-ID')
+        const userId = this.props.navigation.getParam('userId')
+        const chabi = this.props.navigation.getParam('chabi')
+        console.log(userId,chabi)
         // //('userId---->', userId)
         //('chabi-------------------->', chabi)
 
 
         let infoArray = []
         let comments = [];
-        fire.database().ref(`usersAlerts/${userId}/${chabi}/`).once("value", function (snapshot) {
+        fire.database().ref(`usersAlerts/${userId}/${chabi}`).once("value", function (snapshot) {
+            console.log(snapshot)
             let snapShot = snapshot.val()
             // //("snapShot--->", snapShot)
 

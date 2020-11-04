@@ -246,6 +246,7 @@ class allRobHistory extends Component {
             let ProfileURL = snapShot[key].ProfileURL;
             let userName = snapShot[key].userName;
             let createdAt = snapShot[key].createdAt;
+            let userId = snapShot[key].UserId;
             //('createdAt', createdAt)
             let event = new Date(createdAt);
             let date = event.toLocaleDateString('en-US', {
@@ -282,6 +283,7 @@ class allRobHistory extends Component {
               userkey,
               description,
               size,
+              userId
             };
             infoArray.push(crimeDetail);
           }
@@ -538,6 +540,7 @@ class allRobHistory extends Component {
                     onPress={() =>
                       this.props.navigation.navigate('chatScreen', {
                         chabi: mark.userkey,
+                        userId:mark.userId
                       })
                     }
                   >
