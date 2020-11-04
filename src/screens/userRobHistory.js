@@ -336,7 +336,7 @@ class UserRobHistory extends Component {
         const { limit } = this.state;
         const temp = [...this.state.infoArray]
         // //('List============================', temp.length)
-        temp.length = limit;
+        // temp.length = limit;
         // //('List--------------------->0', temp)
         return this.state.fontLoaded ? (
 

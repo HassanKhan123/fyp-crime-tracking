@@ -60,9 +60,9 @@ const MyDrawerNavigator = createDrawerNavigator({
     chatScreen: {
         screen: chatScreen
     },
-    Devices: {
-        screen: UserDevices
-    },
+    // Devices: {
+    //     screen: UserDevices
+    // },
 }, {
 
     contentOptions: {

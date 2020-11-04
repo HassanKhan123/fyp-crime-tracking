@@ -304,9 +304,8 @@ class HomeScreen extends Component {
                 visible: !this.state.visible
             });
         }, 5000);
-    }
 
-    async componentWillMount() {
+
         if (Platform.OS === 'android' && !Constants.isDevice) {
             this.setState({
                 errorMessage: 'Oops, this will not work on Sketch in an Android emulator. Try it on your device!',
@@ -328,8 +327,9 @@ class HomeScreen extends Component {
 
 
         this.setState({ fontLoaded: true, userName, UserId, ProfileURL, UserToken, deviceInfo });
-
     }
+
+   
     _getLocationAsync = async () => {
 
         let { status } = await Permissions.askAsync(Permissions.LOCATION);
@@ -340,7 +340,7 @@ class HomeScreen extends Component {
         }
 
         let location = await Location.getCurrentPositionAsync({});
-        // //('location****', location)
+        console.log(location)
         const region = {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
@@ -348,12 +348,12 @@ class HomeScreen extends Component {
             longitudeDelta: 0.0922 * ASPECT_RATIO
         }
         let regionName = await Location.reverseGeocodeAsync({ longitude: location.coords.longitude, latitude: location.coords.latitude });
+        console.log(regionName)
 
 
-        this.setState({ location, region, marker_lat: location.coords.latitude, marker_long: location.coords.longitude, regionName });
+        this.setState({ location, region, marker_lat: location.coords.latitude, marker_long:  location.coords.longitude, regionName });
 
         this.locationPosition = await Location.watchPositionAsync({ timeInterval: 1000, distanceInterval: 0.1 }, loc => {
-            // //('watching***', loc);
             this.setState({ marker_long: loc.coords.longitude, marker_lat: loc.coords.latitude })
         })
 
@@ -427,7 +427,7 @@ class HomeScreen extends Component {
                         },
                         body: JSON.stringify({
                             to: TokenArr[i],
-                            body: "Please avoid street - " + " " + `${locationcoords[0].street}` + ", " + locationcoords[0].city,
+                            body: "Criminal activity happened at - " + " " + `${locationcoords[0].street || locationcoords[0].name}` + ", " + locationcoords[0].city,
                             sound: 'default',
 
                         })
@@ -740,9 +740,9 @@ class HomeScreen extends Component {
                                         </Text>
                                     </View>
                                     <View style={{ flex: 5, fontFamily: 'ralewayRegular', }}>
-                                        {this.state.regionName.length > 0 && this.state.regionName[0].street !== undefined && this.state.regionName[0].name ?
-                                            <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street}</Text> :
-                                            <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street}</Text>}
+                                        {this.state.regionName.length > 0 && this.state.regionName[0] !== undefined && this.state.regionName[0].street && this.state.regionName[0].name ?
+                                            <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street || this.state.regionName[0].name}</Text> :
+                                            <Text style={{ color: 'white', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].street || this.state.regionName[0].name}</Text>}
                                         <Text style={{ color: '#5d616f', letterSpacing: 1, paddingBottom: 4, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].city + ',' + this.state.regionName[0].country}</Text>
                                         <Text style={{ color: '#5d616f', letterSpacing: 1, fontFamily: 'ralewayRegular', fontSize: 16, textTransform: 'capitalize' }}>{this.state.regionName[0].region + ','}</Text>
                                         {/* <Text style={{color:'#5d616f',letterSpacing : 1, fontFamily: 'ralewayRegular' , fontSize : 14 , textTransform: 'capitalize'}}>latitude: {this.state.marker_lat}</Text>

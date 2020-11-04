@@ -43,6 +43,11 @@ class Crimeinfo extends Component {
         const allKey = this.props.navigation.getParam('allKey', 'NO-ID')
         const userId = this.props.navigation.getParam('userId', 'NO-ID')
 
+        const userName = this.props.navigation.getParam('Name', 'NO-ID')
+        const userProfile = this.props.navigation.getParam('userProfile', 'NO-ID')
+        const userToken = this.props.navigation.getParam('UserToken', 'NO-ID')
+        const deviceInfo = this.props.navigation.getParam('deviceInfo', 'NO-ID')
+
 
         const ReportDesc = {
             description: description,
@@ -64,13 +69,16 @@ class Crimeinfo extends Component {
                 this.setState({ description: '', userId })
             });
         });
-
+        this.props.navigation.navigate('Home',{
+            userId, Name: userName, userProfile: userProfile, UserToken: userToken,
+            deviceinfo: deviceInfo, userkey, allKey: allKey
+        })
     }
 
     goToHistory = () => {
         this.props.navigation.navigate('UserRobHistory', {
             userId: this.state.userId, Name: this.state.userName, userProfile: this.state.ProfileURL, UserToken: this.state.UserToken,
-            deviceinfo: this.state.deviceInfo, userkey: this.state.userKey, allKey: this.state.allKey
+            deviceinfo: this.state.deviceInfo, userkey: this.state.userKey, allKey
         });
     }
 

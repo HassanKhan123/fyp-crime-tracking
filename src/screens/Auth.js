@@ -30,7 +30,6 @@ class AuthScreen extends Component {
 
     async componentDidMount() {
         firebase.auth().onAuthStateChanged((user) => {
-            console.log("user===========",user)
             if (user != null) {
                 this.setState({loading:false})
                 this.props.navigation.navigate('Home', { userId: user.uid, Name: user.displayName});
