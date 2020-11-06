@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {
   Icon,
@@ -223,46 +224,46 @@ class allRobHistory extends Component {
       contentOffsetY: 0,
       infoArray: [],
       modalVisible: false,
+      loading:true
     };
   }
   fetchData() {
     let infoArray = [];
-    fire
-      .database()
-      .ref('allAlerts/')
-      .once('value', function (snapshot) {
-        let snapShot = snapshot.val();
-
-        for (let key in snapShot) {
-          if (snapShot[key]) {
-            let commlen = snapShot[key].comments;
+    fire.firestore().collection('allAlerts') .get()
+    .then((data) => {
+      data.forEach((d) => {
+        
+        let snapShot = d.data();
+       
+        
+         
+            let commlen = snapShot.comments;
 
             let size;
             if (commlen) {
               size = Object.keys(commlen).length;
             }
-            let userkey = key;
+            let userkey = d.id;
             
-            let ProfileURL = snapShot[key].ProfileURL;
-            let userName = snapShot[key].userName;
-            let createdAt = snapShot[key].createdAt;
-            let userId = snapShot[key].UserId;
+            let ProfileURL = snapShot.ProfileURL;
+            let userName = snapShot.userName;
+            let createdAt = snapShot.createdAt.toDate();
+            let userId = snapShot.UserId;
             //('createdAt', createdAt)
-            let event = new Date(createdAt);
-            let date = event.toLocaleDateString('en-US', {
-              timeZone: 'GMT',
-              hour12: true,
-            });
-            let time = moment(createdAt).format('h:mm a');
+            // let event = new Date(createdAt);
+            // let date = event.toLocaleDateString('en-US', {
+            //   timeZone: 'GMT',
+            //   hour12: true,
+            // });
+            let time = moment(createdAt).format('MMMM Do YYYY, h:mm A')
             
-            let description = snapShot[key].description;
+            let description = snapShot.ReportDesc;
             let street,city,marker_lat,marker_long
-            if (snapShot[key].location) {
-                console.log(snapShot[key].location.regionName)
-                 street = snapShot[key].location.regionName[0].street;
-                 city = snapShot[key].location.regionName[0].city;
-                 marker_lat = snapShot[key].location.marker_lat;
-               marker_long = snapShot[key].location.marker_long;
+            if (snapShot.location) {
+                 street = snapShot.location.regionName[0].street;
+                 city = snapShot.location.regionName[0].city;
+                 marker_lat = snapShot.location.marker_lat;
+               marker_long = snapShot.location.marker_long;
               }
             let region = {
               latitude: marker_lat,
@@ -275,8 +276,8 @@ class allRobHistory extends Component {
               city,
               ProfileURL,
               userName,
-              time,
-              date,
+            time,
+              
               marker_lat,
               marker_long,
               region,
@@ -286,29 +287,14 @@ class allRobHistory extends Component {
               userId
             };
             infoArray.push(crimeDetail);
-          }
-
-          // //('---->' , snapShot[key].userName)
-          // //('---->' , snapShot[key].createdAt)
-          // //('---->' , snapShot[key].location.marker_lat)
-          // //('---->' , snapShot[key].location.regionName[0].city)
-        }
+            this.setState({ infoArray,loading:false });
+        
       })
-      .then(() => {
-        infoArray.reverse();
-        this.setState({ infoArray });
-      });
+    })
+   
   }
 
-  componentWillMount() {
-    this.fetchData();
-    this.willFocusSubscription = this.props.navigation.addListener(
-      'willFocus',
-      () => {
-        this.fetchData();
-      }
-    );
-  }
+ 
   componentWillUnmount() {
     this.willFocusSubscription.remove();
   }
@@ -317,7 +303,13 @@ class allRobHistory extends Component {
     await Font.loadAsync({
       ralewayRegular: require('../assets/fonts/Raleway-Regular.ttf'),
     });
-
+    this.fetchData();
+    this.willFocusSubscription = this.props.navigation.addListener(
+      'willFocus',
+      () => {
+        this.fetchData();
+      }
+    );
     this.setState({ fontLoaded: true });
   }
 
@@ -351,13 +343,13 @@ class allRobHistory extends Component {
   render() {
     // //('infoArray---->', this.state.infoArray)
     //('render==========>')
-    const { limit } = this.state;
+    const { limit,loading } = this.state;
     const temp = [...this.state.infoArray];
+  
     // //('List============================', temp.length)
     // temp.length = limit;
     // //('List--------------------->0', temp)
-    return this.state.fontLoaded ? (
-      <Container>
+    return <Container>
         <Header
           style={{
             backgroundColor: '#333846',
@@ -392,7 +384,10 @@ class allRobHistory extends Component {
           </Body>
           <Right style={{ flex: 1 }} />
         </Header>
-
+        {loading ? (
+          <View style={styles.loader}>
+            <ActivityIndicator />
+          </View> ):
         <View
           onScroll={this.handleScroll}
           style={{
@@ -470,7 +465,7 @@ class allRobHistory extends Component {
                     </Text>
                     <Fontisto name='earth' size={13} color='#5d616f' />
                   </View>
-                  {mark.description.length > 0 ? (
+                  {mark.description &&  mark.description.description? (
                     <View style={{ paddingTop: 4, paddingBottom: 10 }}>
                       <Text
                         style={{
@@ -480,7 +475,7 @@ class allRobHistory extends Component {
                           textAlign: 'justify',
                         }}
                       >
-                        {mark.description.length > 0 ? mark.description : '...'}
+                        {mark.description.description}
                       </Text>
                     </View>
                   ) : (
@@ -572,12 +567,21 @@ class allRobHistory extends Component {
             ))}
           </ScrollView>
         </View>
-      </Container>
-    ) : null;
+                    }
+        </Container>
+    
   }
 }
 
 const styles = StyleSheet.create({
+  loader: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top:'50%',
+    left:'47%'
+  },
   container: {
     zIndex: -1, //...StyleSheet.absoluteFill,
     height: 200,

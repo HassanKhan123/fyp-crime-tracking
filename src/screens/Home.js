@@ -423,7 +423,8 @@ class HomeScreen extends Component {
     });
   };
 
-  sendNotification() {
+  sendNotification(regionName) {
+    console.log(regionName)
     // <ScreenChild navigation={this.props.navigation} />
 
     const { userName, UserId, ProfileURL, UserToken } = this.state;
@@ -446,61 +447,43 @@ class HomeScreen extends Component {
           for (var key in tokenData) {
             TokenArr.push(tokenData[key]);
           }
-          fire
-            .firestore()
-            .collection('allAlerts')
-            // .orderByKey()
-            // .limitToLast(1)
-            .get()
-            .then((snapshot) => {
-              snapshot.forEach((snap) => {
-                let alertdata = snap.data();
+          
+        })
+      }).then(() => {
+        for (let i = 0; i < TokenArr.length; i++) {
+          fetch('https://exp.host/--/api/v2/push/send', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: TokenArr[i],
+              body:
+                'Criminal activity happened at - ' +
+                ' ' +
+                `${
+                  regionName[0].street || regionName[0].name
+                }` +
+                ', ' +
+                regionName[0].city,
+              sound: 'default',
+            }),
+          });
+        }
+        Alert.alert(
+          'Notification Generated..',
+          'Do you want to put some details now?',
+          [
+            { text: 'NOW', onPress: this.goToCrimeInfo },
 
-                if (alertdata) {
-                  for (let loop in alertdata) {
-                    if (alertdata[loop].regionName) {
-                      locationcoords.push(alertdata[loop].regionName[0]);
-                    }
-                  }
-                }
-                for (let i = 0; i < TokenArr.length; i++) {
-                  fetch('https://exp.host/--/api/v2/push/send', {
-                    method: 'POST',
-                    headers: {
-                      Accept: 'application/json',
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      to: TokenArr[i],
-                      body:
-                        'Criminal activity happened at - ' +
-                        ' ' +
-                        `${
-                          locationcoords[0].street || locationcoords[0].name
-                        }` +
-                        ', ' +
-                        locationcoords[0].city,
-                      sound: 'default',
-                    }),
-                  });
-                }
-              });
-              TokenArr = '';
-            })
-            .then(() => {
-              Alert.alert(
-                'Notification Generated..',
-                'Do you want to put some details now?',
-                [
-                  { text: 'NOW', onPress: this.goToCrimeInfo },
-
-                  { text: 'LATER', onPress: this.showCrimeMarkers },
-                ],
-                { cancelable: false }
-              );
-            });
-        });
-      });
+            { text: 'LATER', onPress: this.showCrimeMarkers },
+          ],
+          { cancelable: false }
+        );
+        
+      })
+    
   }
   goToCrimeInfo = () => {
     this.props.navigation.navigate('crimeInfo', {
@@ -597,7 +580,7 @@ class HomeScreen extends Component {
 
             //("Rob information has been created");
             this.setState({ userKey: res.id });
-            this.sendNotification();
+            this.sendNotification(regionName);
           });
       })
       .catch((e) => {
