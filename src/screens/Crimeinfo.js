@@ -51,8 +51,11 @@ class Crimeinfo extends Component {
             description: description,
             submitDate: date
         }
-        fire.database().ref(`usersAlerts/${userId}/${userkey}/`).update(ReportDesc).then(() => {
-            fire.database().ref(`allAlerts/${userkey}/`).update(ReportDesc).then(() => {
+        fire.firestore().collection('usersAlerts').doc(userId).collection('userAlerts').doc(userkey).set({
+            ReportDesc
+        },{merge:true}).then(() => {
+            fire.firestore().collection('allAlerts').doc(userkey).set({ReportDesc},{merge:true})
+            .then(() => {
                 Alert.alert(
                     'Your Response has been noticed!',
                     ' We will shortly inspect this area.',
@@ -65,21 +68,14 @@ class Crimeinfo extends Component {
                 );
 
                 this.setState({ description: '', userId })
-            });
-        });
+            })
+        })
+        
         this.props.navigation.navigate('UserRobHistory',{
             userId, Name: userName, userProfile: userProfile, UserToken: userToken,
             deviceinfo: deviceInfo, userkey, allKey: allKey
         })
     }
-
-    // goToHistory = () => {
-    //     this.props.navigation.navigate('UserRobHistory', {
-    //         userId: this.state.userId, Name: this.state.userName, userProfile: this.state.ProfileURL, UserToken: this.state.UserToken,
-    //         deviceinfo: this.state.deviceInfo, userkey: this.state.userKey, allKey
-    //     });
-    // }
-
     render() {
         return this.state.fontLoaded ? (
             <Fragment>

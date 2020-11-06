@@ -43,12 +43,6 @@ import { YellowBox } from 'react-native';
 import _ from 'lodash';
 
 YellowBox.ignoreWarnings(['Warning: google places autocomplete']);
-const _console = _.clone(console);
-console.warn = (message) => {
-  if (message.indexOf('google places autocomplete') <= -1) {
-    _console.warn(message);
-  }
-};
 
 const screen = Dimensions.get('window');
 const ASPECT_RATIO = screen.width / screen.height;
@@ -326,19 +320,7 @@ class HomeScreen extends Component {
           .doc(this.state.UserId)
           .set({ alltokens });
       });
-    // fire
-    //   .database()
-    //   .ref(`Users/${this.state.UserId}/devices/${this.state.deviceInfo}`)
-    //   .update({ expoToken: token })
-    //   .then(() => {
-    //     fire
-    //       .database()
-    //       .ref('ExpoNotifyTokens/' + this.state.UserId)
-    //       .set(alltokens)
-    //       .then(() => {
-    //         //("Success!!")
-    //       });
-    //   });
+   
     this.setState({ expoToken: token });
   };
   async componentDidMount() {
@@ -462,8 +444,6 @@ class HomeScreen extends Component {
         data.docs.forEach((d) => {
           let tokenData = d.data();
           for (var key in tokenData) {
-            console.log(tokenData);
-
             TokenArr.push(tokenData[key]);
           }
           fire
@@ -477,17 +457,12 @@ class HomeScreen extends Component {
                 let alertdata = snap.data();
 
                 if (alertdata) {
-                  // console.log('new record2', alertdata);
-                  console.log(alertdata);
                   for (let loop in alertdata) {
                     if (alertdata[loop].regionName) {
                       locationcoords.push(alertdata[loop].regionName[0]);
                     }
                   }
                 }
-
-                console.log('locationcoords[0].name', locationcoords[0].name);
-
                 for (let i = 0; i < TokenArr.length; i++) {
                   fetch('https://exp.host/--/api/v2/push/send', {
                     method: 'POST',
@@ -513,7 +488,6 @@ class HomeScreen extends Component {
               TokenArr = '';
             })
             .then(() => {
-              console.log('---001----', locationcoords);
               Alert.alert(
                 'Notification Generated..',
                 'Do you want to put some details now?',
@@ -527,76 +501,6 @@ class HomeScreen extends Component {
             });
         });
       });
-
-    // fire
-    //   .database()
-    //   .ref('ExpoNotifyTokens/')
-    //   .once('value', function (data) {
-    //     let tokenData = data.val();
-    //     for (var key in tokenData) {
-    //       console.log(tokenData);
-
-    //       TokenArr.push(tokenData[key]);
-    //     }
-    //   })
-    //   .then(() => {
-    //     // console.log('TokenArr--->', TokenArr)
-    //     fire
-    //       .database()
-    //       .ref('allAlerts')
-    //       .orderByKey()
-    //       .limitToLast(1)
-    //       .on('child_added', (snapshot) => {
-    //         let alertdata = snapshot.val();
-    //         if (alertdata) {
-    //           // console.log('new record2', alertdata);
-    //           console.log(alertdata);
-    //           for (let loop in alertdata) {
-    //             if (alertdata[loop].regionName) {
-    //               locationcoords.push(alertdata[loop].regionName[0]);
-    //             }
-    //           }
-    //         }
-
-    //         console.log('locationcoords[0].name', locationcoords[0].name);
-
-    //         for (let i = 0; i < TokenArr.length; i++) {
-    //           fetch('https://exp.host/--/api/v2/push/send', {
-    //             method: 'POST',
-    //             headers: {
-    //               Accept: 'application/json',
-    //               'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({
-    //               to: TokenArr[i],
-    //               body:
-    //                 'Criminal activity happened at - ' +
-    //                 ' ' +
-    //                 `${locationcoords[0].street || locationcoords[0].name}` +
-    //                 ', ' +
-    //                 locationcoords[0].city,
-    //               sound: 'default',
-    //             }),
-    //           });
-    //         }
-    //         TokenArr = '';
-    //       });
-    //   })
-    //   .then(() => {
-    //     console.log('---001----', locationcoords);
-    //     Alert.alert(
-    //       'Notification Generated..',
-    //       'Do you want to put some details now?',
-    //       [
-    //         { text: 'NOW', onPress: this.goToCrimeInfo },
-
-    //         { text: 'LATER', onPress: this.showCrimeMarkers },
-    //       ],
-    //       { cancelable: false }
-    //     );
-    //   });
-
-    console.log('---002----', locationcoords);
   }
   goToCrimeInfo = () => {
     this.props.navigation.navigate('crimeInfo', {
@@ -621,8 +525,6 @@ class HomeScreen extends Component {
       .then((data) => {
         data.forEach((d) => {
           let AlertData = d.data();
-          console.log("data ==========",AlertData)
-         
             if (
               AlertData.location.marker_lat &&
               AlertData.location.marker_long
@@ -682,19 +584,19 @@ class HomeScreen extends Component {
       .firestore()
       .collection('usersAlerts')
       .doc(UserId)
-      .collection('userAlerts').doc()
-      .set(userRobNotification)
-      .then(() => {
+      .collection('userAlerts')
+      .add(userRobNotification)
+      .then((res) => {
         fire
           .firestore()
           .collection('allAlerts')
-          .doc()
+          .doc(res.id)
           .set(userRobNotification)
           .then((response) => {
             // allkey = response.key
 
             //("Rob information has been created");
-            this.setState({ userKey: UserId });
+            this.setState({ userKey: res.id });
             this.sendNotification();
           });
       })
@@ -715,7 +617,6 @@ class HomeScreen extends Component {
 
   render() {
     const { visible } = this.state;
-    // console.log(this.props.navigation)
     return (
       <Container>
         <Header

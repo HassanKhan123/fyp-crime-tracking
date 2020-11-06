@@ -38,14 +38,6 @@ class AuthScreen extends Component {
                     this.setState({loading:false})
               
                 })
-                
-                // fire.database().ref('Users/' + user.uid).once('value',  (snapshot) => {
-                //     let snapShot = snapshot.val();
-                //     console.log(snapShot)
-                //     // console.log(user)
-                    
-                
-               
             }else{
                 this.setState({loading:false})
             }
@@ -108,33 +100,6 @@ class AuthScreen extends Component {
                     console.log(errorMessage);
                     this.setState({loading:false})
                 })
-                // fire.database().ref('Users/' + UserUid).update({
-                    // userName,
-                    // UserId:UserUid,
-                    // ProfileURL,
-                    // userToken:token, deviceInfo
-                // })
-                //     .then(() => {
-                //         fire.database().ref('Users/' + UserUid + '/' + 'devices/' + deviceInfo).set({ deviceInfo, token }).then(() => {
-                            
-                            // this.props.navigation.navigate('Home', { userId: UserUid, Name: userName, userProfile: ProfileURL, UserToken: token, deviceinfo: deviceInfo });
-                            // this.setState({loading:false})
-                        // })
-                        // .catch((e) => {
-                        //     var errorMessage = error.message;
-                        //     console.log(errorMessage);
-                        //     this.setState({loading:false})
-                        // })
-                //     })
-                //     .catch(function (error) {
-                      
-                //         var errorCode = error.code;
-                //         var errorMessage = error.message;
-                //         console.log(errorMessage);
-                //         this.setState({loading:false})
-                       
-                //     });
-
             });
 
            
