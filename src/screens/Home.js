@@ -233,7 +233,9 @@ class HomeScreen extends Component {
   static navigationOptions = {
     header: null,
     drawerLabel: 'Home',
-    drawerIcon: ({ tintColor }) => <MaterialIcons name="home" size={24} color={tintColor} />
+    drawerIcon: ({ tintColor }) => (
+      <MaterialIcons name='home' size={24} color={tintColor} />
+    ),
   };
   constructor(props) {
     super(props);
@@ -304,18 +306,39 @@ class HomeScreen extends Component {
 
     //('toooken****', token)
     fire
-      .database()
-      .ref(`Users/${this.state.UserId}/devices/${this.state.deviceInfo}`)
-      .update({ expoToken: token })
+      .firestore()
+      .collection('Users')
+      .doc(this.state.UserId)
+      .set(
+        {
+          devices: {
+            [this.state.deviceInfo]: {
+              expoToken: token,
+            },
+          },
+        },
+        { merge: true }
+      )
       .then(() => {
         fire
-          .database()
-          .ref('ExpoNotifyTokens/' + this.state.UserId)
-          .set(alltokens)
-          .then(() => {
-            //("Success!!")
-          });
+          .firestore()
+          .collection('ExpoNotifyTokens')
+          .doc(this.state.UserId)
+          .set({ alltokens });
       });
+    // fire
+    //   .database()
+    //   .ref(`Users/${this.state.UserId}/devices/${this.state.deviceInfo}`)
+    //   .update({ expoToken: token })
+    //   .then(() => {
+    //     fire
+    //       .database()
+    //       .ref('ExpoNotifyTokens/' + this.state.UserId)
+    //       .set(alltokens)
+    //       .then(() => {
+    //         //("Success!!")
+    //       });
+    //   });
     this.setState({ expoToken: token });
   };
   async componentDidMount() {
@@ -345,7 +368,7 @@ class HomeScreen extends Component {
     const UserToken = this.props.navigation.state.params.UserToken;
     const deviceInfo = this.props.navigation.state.params.deviceinfo;
 
-    console.log('===', userName, UserToken, deviceInfo);
+    console.log('===', UserId, userName, UserToken, deviceInfo);
 
     this.setState({
       fontLoaded: true,
@@ -430,73 +453,148 @@ class HomeScreen extends Component {
     let locationStreet;
     let locationcountry;
     let locationregion;
+
     fire
-      .database()
-      .ref('ExpoNotifyTokens/')
-      .once('value', function (data) {
-        let tokenData = data.val();
-        for (var key in tokenData) {
-          console.log(tokenData);
+      .firestore()
+      .collection('ExpoNotifyTokens')
+      .get()
+      .then((data) => {
+        data.docs.forEach((d) => {
+          let tokenData = d.data();
+          for (var key in tokenData) {
+            console.log(tokenData);
 
-          TokenArr.push(tokenData[key]);
-        }
-      })
-      .then(() => {
-        // console.log('TokenArr--->', TokenArr)
-        fire
-          .database()
-          .ref('allAlerts')
-          .orderByKey()
-          .limitToLast(1)
-          .on('child_added', (snapshot) => {
-            let alertdata = snapshot.val();
-            if (alertdata) {
-              // console.log('new record2', alertdata);
-              console.log(alertdata);
-              for (let loop in alertdata) {
-                if (alertdata[loop].regionName) {
-                  locationcoords.push(alertdata[loop].regionName[0]);
+            TokenArr.push(tokenData[key]);
+          }
+          fire
+            .firestore()
+            .collection('allAlerts')
+            // .orderByKey()
+            // .limitToLast(1)
+            .get()
+            .then((snapshot) => {
+              snapshot.forEach((snap) => {
+                let alertdata = snap.data();
+
+                if (alertdata) {
+                  // console.log('new record2', alertdata);
+                  console.log(alertdata);
+                  for (let loop in alertdata) {
+                    if (alertdata[loop].regionName) {
+                      locationcoords.push(alertdata[loop].regionName[0]);
+                    }
+                  }
                 }
-              }
-            }
 
-            console.log('locationcoords[0].name', locationcoords[0].name);
+                console.log('locationcoords[0].name', locationcoords[0].name);
 
-            for (let i = 0; i < TokenArr.length; i++) {
-              fetch('https://exp.host/--/api/v2/push/send', {
-                method: 'POST',
-                headers: {
-                  Accept: 'application/json',
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  to: TokenArr[i],
-                  body:
-                    'Criminal activity happened at - ' +
-                    ' ' +
-                    `${locationcoords[0].street || locationcoords[0].name}` +
-                    ', ' +
-                    locationcoords[0].city,
-                  sound: 'default',
-                }),
+                for (let i = 0; i < TokenArr.length; i++) {
+                  fetch('https://exp.host/--/api/v2/push/send', {
+                    method: 'POST',
+                    headers: {
+                      Accept: 'application/json',
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      to: TokenArr[i],
+                      body:
+                        'Criminal activity happened at - ' +
+                        ' ' +
+                        `${
+                          locationcoords[0].street || locationcoords[0].name
+                        }` +
+                        ', ' +
+                        locationcoords[0].city,
+                      sound: 'default',
+                    }),
+                  });
+                }
               });
-            }
-            TokenArr = '';
-          });
-      })
-      .then(() => {
-        console.log('---001----', locationcoords);
-        Alert.alert(
-          'Notification Generated..',
-          'Do you want to put some details now?',
-          [
-            { text: 'NOW', onPress: this.goToCrimeInfo },
+              TokenArr = '';
+            })
+            .then(() => {
+              console.log('---001----', locationcoords);
+              Alert.alert(
+                'Notification Generated..',
+                'Do you want to put some details now?',
+                [
+                  { text: 'NOW', onPress: this.goToCrimeInfo },
 
-            { text: 'LATER', onPress: this.showCrimeMarkers },
-          ],
-          { cancelable: false }
-        );
+                  { text: 'LATER', onPress: this.showCrimeMarkers },
+                ],
+                { cancelable: false }
+              );
+            });
+        });
       });
+
+    // fire
+    //   .database()
+    //   .ref('ExpoNotifyTokens/')
+    //   .once('value', function (data) {
+    //     let tokenData = data.val();
+    //     for (var key in tokenData) {
+    //       console.log(tokenData);
+
+    //       TokenArr.push(tokenData[key]);
+    //     }
+    //   })
+    //   .then(() => {
+    //     // console.log('TokenArr--->', TokenArr)
+    //     fire
+    //       .database()
+    //       .ref('allAlerts')
+    //       .orderByKey()
+    //       .limitToLast(1)
+    //       .on('child_added', (snapshot) => {
+    //         let alertdata = snapshot.val();
+    //         if (alertdata) {
+    //           // console.log('new record2', alertdata);
+    //           console.log(alertdata);
+    //           for (let loop in alertdata) {
+    //             if (alertdata[loop].regionName) {
+    //               locationcoords.push(alertdata[loop].regionName[0]);
+    //             }
+    //           }
+    //         }
+
+    //         console.log('locationcoords[0].name', locationcoords[0].name);
+
+    //         for (let i = 0; i < TokenArr.length; i++) {
+    //           fetch('https://exp.host/--/api/v2/push/send', {
+    //             method: 'POST',
+    //             headers: {
+    //               Accept: 'application/json',
+    //               'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //               to: TokenArr[i],
+    //               body:
+    //                 'Criminal activity happened at - ' +
+    //                 ' ' +
+    //                 `${locationcoords[0].street || locationcoords[0].name}` +
+    //                 ', ' +
+    //                 locationcoords[0].city,
+    //               sound: 'default',
+    //             }),
+    //           });
+    //         }
+    //         TokenArr = '';
+    //       });
+    //   })
+    //   .then(() => {
+    //     console.log('---001----', locationcoords);
+    //     Alert.alert(
+    //       'Notification Generated..',
+    //       'Do you want to put some details now?',
+    //       [
+    //         { text: 'NOW', onPress: this.goToCrimeInfo },
+
+    //         { text: 'LATER', onPress: this.showCrimeMarkers },
+    //       ],
+    //       { cancelable: false }
+    //     );
+    //   });
 
     console.log('---002----', locationcoords);
   }
@@ -517,29 +615,30 @@ class HomeScreen extends Component {
     let placemarkers = [];
     let coordinates = {};
     fire
-      .database()
-      .ref('allAlerts/')
-      .once('value', function (data) {
-        //('allAlerts--->', data.val())
-        let AlertData = data.val();
-        for (var key in AlertData) {
-          //('---->', AlertData[key].location)
-          //  //('lat---->' , AlertData[key].location.marker_lat)
-          if (
-            AlertData[key].location.marker_lat &&
-            AlertData[key].location.marker_long
-          ) {
-            let latitude = AlertData[key].location.marker_lat;
-            let longitude = AlertData[key].location.marker_long;
+      .firestore()
+      .collection('allAlerts')
+      .get()
+      .then((data) => {
+        data.forEach((d) => {
+          let AlertData = d.data();
+          console.log("data ==========",AlertData)
+         
+            if (
+              AlertData.location.marker_lat &&
+              AlertData.location.marker_long
+            ) {
+              let latitude = AlertData.location.marker_lat;
+              let longitude = AlertData.location.marker_long;
 
-            coordinates = {
-              latitude: latitude,
-              longitude: longitude,
-            };
-            AlertArr.push({ coordinates });
-            placemarkers.push(coordinates);
-          }
-        }
+              coordinates = {
+                latitude: latitude,
+                longitude: longitude,
+              };
+              AlertArr.push({ coordinates });
+              placemarkers.push(coordinates);
+            }
+          
+        });
       })
       .then(() => {
         this.setState({
@@ -569,7 +668,7 @@ class HomeScreen extends Component {
       UserId,
       ProfileURL,
       UserToken,
-      createdAt: firebase.database.ServerValue.TIMESTAMP,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       location: {
         marker_lat,
         marker_long,
@@ -580,26 +679,29 @@ class HomeScreen extends Component {
     };
 
     fire
-      .database()
-      .ref('usersAlerts/' + UserId)
-      .push(userRobNotification)
-      .then((response) => {
-        userkey = response.key;
+      .firestore()
+      .collection('usersAlerts')
+      .doc(UserId)
+      .collection('userAlerts').doc()
+      .set(userRobNotification)
+      .then(() => {
         fire
-          .database()
-          .ref('allAlerts/' + userkey)
+          .firestore()
+          .collection('allAlerts')
+          .doc()
           .set(userRobNotification)
           .then((response) => {
             // allkey = response.key
 
             //("Rob information has been created");
-            this.setState({ userKey: userkey });
+            this.setState({ userKey: UserId });
             this.sendNotification();
           });
       })
       .catch((e) => {
-        var errorMessage = error.message;
+        var errorMessage = e.message;
         //(errorMessage);
+        console.log(errorMessage);
       });
   }
 
@@ -650,127 +752,135 @@ class HomeScreen extends Component {
           </Body>
           <Right style={{ flex: 1 }} />
         </Header>
-        {this.state.visible ?
-        <View style={styles.animationContainer}>
-          <LottieView
-            ref={(animation) => {
-              this.animation = animation;
-            }}
-            style={{
-              width: 140,
-              height: 140,
-            }}
-            source={require('../assets/animation/location.json')}
-            // OR find more Lottie files @ https://lottiefiles.com/featured
-            // Just click the one you like, place that file in the 'assets' folder to the left, and replace the above 'require' statement
-          />
-        </View>
-        :
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <SafeAreaView
-            style={{ flex: 1, backgroundColor: '#fff' }}
-            keyboardShouldPersistTaps='always'
+        {this.state.visible ? (
+          <View style={styles.animationContainer}>
+            <LottieView
+              ref={(animation) => {
+                this.animation = animation;
+              }}
+              style={{
+                width: 140,
+                height: 140,
+              }}
+              source={require('../assets/animation/location.json')}
+              // OR find more Lottie files @ https://lottiefiles.com/featured
+              // Just click the one you like, place that file in the 'assets' folder to the left, and replace the above 'require' statement
+            />
+          </View>
+        ) : (
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            accessible={false}
           >
-            <View style={styles.wrapper}>
-              <Toast
-                style={{
-                  backgroundColor: '#2d3441BF',
-                  borderRadius: 0,
-                  color: '#fff',
-                  fontFamily: 'ralewayRegular',
-                  fontSize: 16,
-                }}
-                visible={this.state.visible}
-                message='Hold on a second.'
-              />
-
-              {this.state.markers.length > 0 ? (
-                <MapView
+            <SafeAreaView
+              style={{ flex: 1, backgroundColor: '#fff' }}
+              keyboardShouldPersistTaps='always'
+            >
+              <View style={styles.wrapper}>
+                <Toast
                   style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
+                    backgroundColor: '#2d3441BF',
+                    borderRadius: 0,
+                    color: '#fff',
+                    fontFamily: 'ralewayRegular',
+                    fontSize: 16,
                   }}
-                  ref={(mapRef) =>
-                    mapRef === null ? null : mapRef.fitToElements(true)
-                  }
-                  customMapStyle={mapStyle}
-                  followUserLocation={true}
-                  zoomEnabled={true}
-                  onLayout={() =>
-                    this.mapRef.fitToCoordinates(this.state.placemarkers, {
-                      edgePadding: { top: 50, right: 10, bottom: 10, left: 10 },
-                      animated: false,
-                    })
-                  }
-                >
-                  {this.state.markers.map((mark, index) => (
+                  visible={this.state.visible}
+                  message='Hold on a second.'
+                />
+
+                {this.state.markers.length > 0 ? (
+                  <MapView
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                    ref={(mapRef) =>
+                      mapRef === null ? null : mapRef.fitToElements(true)
+                    }
+                    customMapStyle={mapStyle}
+                    followUserLocation={true}
+                    zoomEnabled={true}
+                    onLayout={() =>
+                      this.mapRef.fitToCoordinates(this.state.placemarkers, {
+                        edgePadding: {
+                          top: 50,
+                          right: 10,
+                          bottom: 10,
+                          left: 10,
+                        },
+                        animated: false,
+                      })
+                    }
+                  >
+                    {this.state.markers.map((mark, index) => (
+                      <Marker
+                        key={index}
+                        ref={(marker) => {
+                          this.marker = marker;
+                        }}
+                        coordinate={mark.coordinates}
+                      >
+                        {/* <Image source={require('../assets/images/loc.png')} style={{ width: 40, height: 40 }} /> */}
+                      </Marker>
+                    ))}
+                  </MapView>
+                ) : (
+                  <MapView
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                    ref={(map) => {
+                      this.map = map;
+                    }}
+                    region={this.state.region}
+                    initialRegion={this.state.region}
+                    customMapStyle={mapStyle}
+                    followUserLocation={true}
+                    zoomEnabled={true}
+                  >
                     <Marker
-                      key={index}
                       ref={(marker) => {
                         this.marker = marker;
                       }}
-                      coordinate={mark.coordinates}
-                    >
-                      {/* <Image source={require('../assets/images/loc.png')} style={{ width: 40, height: 40 }} /> */}
-                    </Marker>
-                  ))}
-                </MapView>
-              ) : (
-                <MapView
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                  }}
-                  ref={(map) => {
-                    this.map = map;
-                  }}
-                  region={this.state.region}
-                  initialRegion={this.state.region}
-                  customMapStyle={mapStyle}
-                  followUserLocation={true}
-                  zoomEnabled={true}
-                >
-                  <Marker
-                    ref={(marker) => {
-                      this.marker = marker;
-                    }}
-                    coordinate={{
-                      latitude: this.state.marker_lat,
-                      longitude: this.state.marker_long,
-                    }}
-                    title={'Current Location'}
-                  />
-                </MapView>
-              )}
-
-              {!this.state.isModalVisible && (
-                <View style={{ position: 'absolute', top: 10, left: 10 }}>
-                  <TouchableOpacity
-                    style={{ flexDirection: 'row' }}
-                    onPress={this.toBack}
-                  >
-                    <Ionicons name='ios-arrow-back' size={22} color='white' />
-                    <Text
-                      style={{
-                        fontFamily: 'ralewayRegular',
-                        fontSize: 14,
-                        color: 'white',
-                        paddingLeft: 7,
-                        paddingTop: 4,
+                      coordinate={{
+                        latitude: this.state.marker_lat,
+                        longitude: this.state.marker_long,
                       }}
+                      title={'Current Location'}
+                    />
+                  </MapView>
+                )}
+
+                {!this.state.isModalVisible && (
+                  <View style={{ position: 'absolute', top: 10, left: 10 }}>
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row' }}
+                      onPress={this.toBack}
                     >
-                      Back
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {/* this.state.isModalVisible && <View style={{ position: 'absolute', top: 28, left: 27, width: '85%' }}>
+                      <Ionicons name='ios-arrow-back' size={22} color='white' />
+                      <Text
+                        style={{
+                          fontFamily: 'ralewayRegular',
+                          fontSize: 14,
+                          color: 'white',
+                          paddingLeft: 7,
+                          paddingTop: 4,
+                        }}
+                      >
+                        Back
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {/* this.state.isModalVisible && <View style={{ position: 'absolute', top: 28, left: 27, width: '85%' }}>
                                 <GooglePlacesAutocomplete
                                     placeholder='Search Location...'
                                     minLength={2}
@@ -878,152 +988,153 @@ class HomeScreen extends Component {
                                 />
 
                                 </View> */}
-              {this.state.isModalVisible && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    bottom: 26,
-                    left: 27,
-                    width: '85%',
-                    backgroundColor: '#333846',
-                    padding: 18,
-                    elevation: 1,
-                  }}
-                >
-                  <View style={{ flexDirection: 'row' }}>
-                    <View style={{ flex: 1 }}>
-                      <Text>
-                        <Entypo name='direction' size={40} color='#d98e3c' />
-                      </Text>
-                    </View>
-                { this.state.regionName.length > 0 &&    
-                    <View style={{ flex: 5, fontFamily: 'ralewayRegular' }}>
-                      {this.state.regionName &&
-                      this.state.regionName.length > 0 &&
-                      this.state.regionName[0] !== undefined &&
-                      this.state.regionName[0].street
-                      
-                      ? (
-                        <Text
-                          style={{
-                            color: 'white',
-                            letterSpacing: 1,
-                            paddingBottom: 4,
-                            fontFamily: 'ralewayRegular',
-                            fontSize: 16,
-                            textTransform: 'capitalize',
-                          }}
-                        >
-                          {this.state.regionName[0].street}
-                        </Text>
-                      ) : (
-                        <Text
-                          style={{
-                            color: 'white',
-                            letterSpacing: 1,
-                            paddingBottom: 4,
-                            fontFamily: 'ralewayRegular',
-                            fontSize: 16,
-                            textTransform: 'capitalize',
-                          }}
-                        >
-                          {this.state.regionName[0].name && this.state.regionName[0].name}
-                        </Text>
-                      )}
-
-                      <Text
-                        style={{
-                          color: '#5d616f',
-                          letterSpacing: 1,
-                          paddingBottom: 4,
-                          fontFamily: 'ralewayRegular',
-                          fontSize: 16,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {this.state.regionName &&
-                          this.state.regionName.length > 0 &&
-                          this.state.regionName[0].city +
-                            ',' +
-                            this.state.regionName[0].country}
-                      </Text>
-                      <Text
-                        style={{
-                          color: '#5d616f',
-                          letterSpacing: 1,
-                          fontFamily: 'ralewayRegular',
-                          fontSize: 16,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {this.state.regionName &&
-                          this.state.regionName.length > 0 &&
-                          this.state.regionName[0].region + ','}
-                      </Text>
-                      {/* <Text style={{color:'#5d616f',letterSpacing : 1, fontFamily: 'ralewayRegular' , fontSize : 14 , textTransform: 'capitalize'}}>latitude: {this.state.marker_lat}</Text>
-                                    <Text style={{color:'#5d616f',letterSpacing : 1, fontFamily: 'ralewayRegular' , fontSize : 14 , textTransform: 'capitalize'}}>longitude: {this.state.marker_long}</Text> */}
-                      <Text
-                        style={{
-                          color: '#5d616f',
-                          letterSpacing: 1,
-                          fontFamily: 'ralewayRegular',
-                          fontSize: 14,
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        Coords: {this.state.marker_lat},{' '}
-                        {this.state.marker_long}
-                      </Text>
-                    </View>}
-                  </View>
+                {this.state.isModalVisible && (
                   <View
                     style={{
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'column',
-                      paddingTop: 8,
-                      width: '100%',
+                      position: 'absolute',
+                      bottom: 26,
+                      left: 27,
+                      width: '85%',
+                      backgroundColor: '#333846',
+                      padding: 18,
+                      elevation: 1,
                     }}
                   >
-                    <TouchableOpacity
+                    <View style={{ flexDirection: 'row' }}>
+                      <View style={{ flex: 1 }}>
+                        <Text>
+                          <Entypo name='direction' size={40} color='#d98e3c' />
+                        </Text>
+                      </View>
+                      {this.state.regionName.length > 0 && (
+                        <View style={{ flex: 5, fontFamily: 'ralewayRegular' }}>
+                          {this.state.regionName &&
+                          this.state.regionName.length > 0 &&
+                          this.state.regionName[0] !== undefined &&
+                          this.state.regionName[0].street ? (
+                            <Text
+                              style={{
+                                color: 'white',
+                                letterSpacing: 1,
+                                paddingBottom: 4,
+                                fontFamily: 'ralewayRegular',
+                                fontSize: 16,
+                                textTransform: 'capitalize',
+                              }}
+                            >
+                              {this.state.regionName[0].street}
+                            </Text>
+                          ) : (
+                            <Text
+                              style={{
+                                color: 'white',
+                                letterSpacing: 1,
+                                paddingBottom: 4,
+                                fontFamily: 'ralewayRegular',
+                                fontSize: 16,
+                                textTransform: 'capitalize',
+                              }}
+                            >
+                              {this.state.regionName[0].name &&
+                                this.state.regionName[0].name}
+                            </Text>
+                          )}
+
+                          <Text
+                            style={{
+                              color: '#5d616f',
+                              letterSpacing: 1,
+                              paddingBottom: 4,
+                              fontFamily: 'ralewayRegular',
+                              fontSize: 16,
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            {this.state.regionName &&
+                              this.state.regionName.length > 0 &&
+                              this.state.regionName[0].city +
+                                ',' +
+                                this.state.regionName[0].country}
+                          </Text>
+                          <Text
+                            style={{
+                              color: '#5d616f',
+                              letterSpacing: 1,
+                              fontFamily: 'ralewayRegular',
+                              fontSize: 16,
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            {this.state.regionName &&
+                              this.state.regionName.length > 0 &&
+                              this.state.regionName[0].region + ','}
+                          </Text>
+                          {/* <Text style={{color:'#5d616f',letterSpacing : 1, fontFamily: 'ralewayRegular' , fontSize : 14 , textTransform: 'capitalize'}}>latitude: {this.state.marker_lat}</Text>
+                                    <Text style={{color:'#5d616f',letterSpacing : 1, fontFamily: 'ralewayRegular' , fontSize : 14 , textTransform: 'capitalize'}}>longitude: {this.state.marker_long}</Text> */}
+                          <Text
+                            style={{
+                              color: '#5d616f',
+                              letterSpacing: 1,
+                              fontFamily: 'ralewayRegular',
+                              fontSize: 14,
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            Coords: {this.state.marker_lat},{' '}
+                            {this.state.marker_long}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <View
                       style={{
-                        borderColor: '#5d616f',
-                        borderWidth: 1,
-                        color: 'white',
-                        paddingTop: 10,
-                        paddingBottom: 10,
-                        paddingLeft: 18,
-                        paddingRight: 18,
-                        alignItems: 'center',
+                        justifyContent: 'center',
                         textAlign: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'column',
+                        paddingTop: 8,
+                        width: '100%',
                       }}
-                      onPress={this.handleButtonPress}
-                      onLongPress={this._onLongPressButton}
                     >
-                      <Text
+                      <TouchableOpacity
                         style={{
+                          borderColor: '#5d616f',
+                          borderWidth: 1,
                           color: 'white',
-                          fontFamily: 'ralewayRegular',
-                          fontSize: 16,
-                          letterSpacing: 1.2,
+                          paddingTop: 10,
+                          paddingBottom: 10,
+                          paddingLeft: 18,
+                          paddingRight: 18,
+                          alignItems: 'center',
+                          textAlign: 'center',
                         }}
+                        onPress={this.handleButtonPress}
+                        onLongPress={this._onLongPressButton}
                       >
-                        {' '}
-                        Robbed{' '}
-                        <Feather
-                          name='alert-triangle'
-                          size={20}
-                          color='white'
-                        />
-                      </Text>
-                    </TouchableOpacity>
+                        <Text
+                          style={{
+                            color: 'white',
+                            fontFamily: 'ralewayRegular',
+                            fontSize: 16,
+                            letterSpacing: 1.2,
+                          }}
+                        >
+                          {' '}
+                          Robbed{' '}
+                          <Feather
+                            name='alert-triangle'
+                            size={20}
+                            color='white'
+                          />
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
-              )}
-            </View>
-          </SafeAreaView>
-        </TouchableWithoutFeedback> }
+                )}
+              </View>
+            </SafeAreaView>
+          </TouchableWithoutFeedback>
+        )}
       </Container>
     );
   }

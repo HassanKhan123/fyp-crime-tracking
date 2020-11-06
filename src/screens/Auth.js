@@ -31,15 +31,20 @@ class AuthScreen extends Component {
     async componentDidMount() {
         firebase.auth().onAuthStateChanged((user) => {
             if (user != null) {
-                
-                fire.database().ref('Users/' + user.uid).once('value',  (snapshot) => {
-                    let snapShot = snapshot.val();
-                    console.log(snapShot)
-                    // console.log(user)
-                    
-                    this.props.navigation.navigate('CrimeInfo', { userId: user.uid, Name: snapShot.userName, userProfile: snapShot.ProfileURL, UserToken: snapShot.userToken, deviceinfo: snapShot.deviceInfo });
+                fire.firestore().collection('Users').doc(user.uid).get().then((user) => {
+                    console.log("db==========",user.data())
+                    let snapShot = user.data()
+                        this.props.navigation.navigate('CrimeInfo', { userId: snapShot.UserId, Name: snapShot.userName, userProfile: snapShot.ProfileURL, UserToken: snapShot.userToken, deviceinfo: snapShot.deviceInfo });
                     this.setState({loading:false})
+              
                 })
+                
+                // fire.database().ref('Users/' + user.uid).once('value',  (snapshot) => {
+                //     let snapShot = snapshot.val();
+                //     console.log(snapShot)
+                //     // console.log(user)
+                    
+                
                
             }else{
                 this.setState({loading:false})
@@ -65,7 +70,7 @@ class AuthScreen extends Component {
         declinedPermissions,
       } = await Facebook.logInWithReadPermissionsAsync({
         permissions: ['public_profile','email'],
-        behavior: 'web'
+        // behavior: 'web'
       });
         
         
@@ -77,6 +82,7 @@ class AuthScreen extends Component {
                 `https://graph.facebook.com/me?access_token=${token}&fields=id,name,picture.type(large)`
             );
             const userInfo = await response.json();
+            console.log("info=======", userInfo)
 
             firebase.auth().signInWithCredential(credential).then((res) => {
                 
@@ -85,31 +91,49 @@ class AuthScreen extends Component {
                 const ProfileURL = `${res.user.photoURL}?type=large`;
                
                 const deviceInfo = Constants.deviceName;
-                fire.database().ref('Users/' + UserUid).update({
+                fire.firestore().collection('Users').doc(UserUid).set({
                     userName,
                     UserId:UserUid,
                     ProfileURL,
-                    userToken:token, deviceInfo
+                    userToken:token, deviceInfo,
+                    devices:{
+                        deviceInfo, token
+                    }
+                }).then(() => {
+                    this.props.navigation.navigate('Home', { userId: UserUid, Name: userName, userProfile: ProfileURL, UserToken: token, deviceinfo: deviceInfo });
+                    this.setState({loading:false})
                 })
-                    .then(() => {
-                        fire.database().ref('Users/' + UserUid + '/' + 'devices/' + deviceInfo).set({ deviceInfo, token }).then(() => {
+                .catch((e) => {
+                    var errorMessage = error.message;
+                    console.log(errorMessage);
+                    this.setState({loading:false})
+                })
+                // fire.database().ref('Users/' + UserUid).update({
+                    // userName,
+                    // UserId:UserUid,
+                    // ProfileURL,
+                    // userToken:token, deviceInfo
+                // })
+                //     .then(() => {
+                //         fire.database().ref('Users/' + UserUid + '/' + 'devices/' + deviceInfo).set({ deviceInfo, token }).then(() => {
                             
-                            this.props.navigation.navigate('Home', { userId: UserUid, Name: userName, userProfile: ProfileURL, UserToken: token, deviceinfo: deviceInfo });
-                            this.setState({loading:false})
-                        }).catch((e) => {
-                            var errorMessage = error.message;
-                            console.log(errorMessage);
-                            this.setState({loading:false})
-                        })
-                    })
-                    .catch(function (error) {
+                            // this.props.navigation.navigate('Home', { userId: UserUid, Name: userName, userProfile: ProfileURL, UserToken: token, deviceinfo: deviceInfo });
+                            // this.setState({loading:false})
+                        // })
+                        // .catch((e) => {
+                        //     var errorMessage = error.message;
+                        //     console.log(errorMessage);
+                        //     this.setState({loading:false})
+                        // })
+                //     })
+                //     .catch(function (error) {
                       
-                        var errorCode = error.code;
-                        var errorMessage = error.message;
-                        console.log(errorMessage);
-                        this.setState({loading:false})
+                //         var errorCode = error.code;
+                //         var errorMessage = error.message;
+                //         console.log(errorMessage);
+                //         this.setState({loading:false})
                        
-                    });
+                //     });
 
             });
 
