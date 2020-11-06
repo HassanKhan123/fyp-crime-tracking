@@ -3,6 +3,7 @@
     "name": "CITIZEN",
     "slug": "Citizen",
     "privacy": "public",
+    "icon":"./assets/icon_new.png",
     "sdkVersion": "36.0.0",
     "platforms": [
       "ios",
@@ -10,13 +11,27 @@
       "web"
     ],
     "android": {
-      "package": "com.Paracha.Citizen",
+      "package": "com.Hassan.Citizen",
       "versionCode": 1,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyATREe5fBzmZvuDNcCHVr3_ue2gZ5dwbSU"
         }
       }
+    },
+    "splash": {
+      "image": "./assets/company.png",
+      "backgroundColor": "#ffffff",
+      "resizeMode": "cover"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
     },
     "version": "1.0.0",
     "orientation": "portrait"

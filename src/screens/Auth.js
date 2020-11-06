@@ -65,6 +65,7 @@ class AuthScreen extends Component {
         declinedPermissions,
       } = await Facebook.logInWithReadPermissionsAsync({
         permissions: ['public_profile','email'],
+        behavior: 'web'
       });
         
         
