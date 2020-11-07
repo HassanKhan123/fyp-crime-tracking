@@ -238,10 +238,11 @@ class allRobHistory extends Component {
         
          
             let commlen = snapShot.comments;
+            console.log("a===",commlen)
 
             let size;
-            if (commlen) {
-              size = Object.keys(commlen).length;
+            if (commlen && commlen.length > 0) {
+              size = commlen.length;
             }
             let userkey = d.id;
             

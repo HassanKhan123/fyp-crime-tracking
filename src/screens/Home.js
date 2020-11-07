@@ -560,7 +560,7 @@ class HomeScreen extends Component {
         regionName,
       },
       description: '',
-      comments: '',
+      comments: [],
     };
 
     fire

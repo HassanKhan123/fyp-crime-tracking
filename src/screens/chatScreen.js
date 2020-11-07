@@ -4,6 +4,8 @@ import { Icon, Button, Container, Header, Content, Left, Body, Right, Card, Card
 import { AntDesign, MaterialIcons, FontAwesome, Ionicons, Fontisto } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import * as Font from 'expo-font';
+import * as firebase from 'firebase';
+
 import fire from '../config/firebase';
 import { Dimensions } from 'react-native';
 import { NavigationEvents } from 'react-navigation';
@@ -216,9 +218,9 @@ class chatScreen extends Component {
 
         let infoArray = []
         let comments = [];
-        fire.database().ref(`usersAlerts/${userId}/${chabi}`).once("value", function (snapshot) {
-            console.log(snapshot)
-            let snapShot = snapshot.val()
+        fire.firestore().collection('usersAlerts').doc(userId).collection('userAlerts').doc(chabi).get()
+        .then((snapshot) => {
+            let snapShot = snapshot.data()
             // //("snapShot--->", snapShot)
 
             // //('---->' , snapShot[key].ProfileURL)
@@ -226,29 +228,25 @@ class chatScreen extends Component {
             // //('---->' , snapShot[key].createdAt)
             // //('---->' , snapShot[key].location.marker_lat)
             // //('---->' , snapShot[key].location.regionName[0].city)
-            let comment = snapShot.comments;
+            let comments = snapShot.comments;
+            // if(comment && comment.length > 0){
 
-            for (let key in comment) {
-
-                //('----->', comment[key])
-                comments.push(comment[key])
-            }
-
+            //     comments.push(comment)
+            // }
 
 
             let street = snapShot.location.regionName[0].street
             let city = snapShot.location.regionName[0].city
             let ProfileURL = snapShot.ProfileURL
             let userName = snapShot.userName
-            let createdAt = snapShot.createdAt
+            let createdAt = snapShot.createdAt.toDate();
             //('createdAt', createdAt)
-            let event = new Date(createdAt);
-            let date = event.toLocaleDateString('en-US', { timeZone: 'GMT', hour12: true, })
-            let time = moment(createdAt).format('h:mm a')
-
+            // let event = new Date(createdAt);
+           
+            let time = moment(createdAt).format('MMMM Do YYYY, h:mm A')
             let marker_lat = snapShot.location.marker_lat
             let marker_long = snapShot.location.marker_long
-            let description = snapShot.description
+            let description = snapShot.ReportDesc
             // let comments = snapShot.comments
             let region = {
                 latitude: marker_lat,
@@ -262,7 +260,7 @@ class chatScreen extends Component {
                 ProfileURL,
                 userName,
                 time,
-                date,
+                // date,
                 comments,
                 marker_lat,
                 marker_long,
@@ -271,24 +269,14 @@ class chatScreen extends Component {
                 description
             }
             infoArray.push(crimeDetail)
-
-
-        }).then(() => {
             infoArray.reverse()
             this.setState({ infoArray, commentsArr: comments })
+
+
         })
 
     }
-    componentWillMount() {
-        this.fetchData()
-        this.willFocusSubscription = this.props.navigation.addListener(
-            'willFocus',
-            () => {
-                this.fetchData();
-            }
-        );
-
-    }
+   
     componentWillUnmount() {
         this.willFocusSubscription.remove();
     }
@@ -297,7 +285,13 @@ class chatScreen extends Component {
         await Font.loadAsync({
             'ralewayRegular': require('../assets/fonts/Raleway-Regular.ttf'),
         });
-
+        this.fetchData()
+        this.willFocusSubscription = this.props.navigation.addListener(
+            'willFocus',
+            () => {
+                this.fetchData();
+            }
+        );
         this.setState({ fontLoaded: true });
     }
 
@@ -321,28 +315,31 @@ class chatScreen extends Component {
             comment
         }
 
-        fire.database().ref(`usersAlerts/${userId}/${chabi}/comments`).push(writeComment).then((response) => {
-            fire.database().ref(`allAlerts/${chabi}/comments`).push(writeComment).then((response) => {
+        fire.firestore().collection('usersAlerts').doc(userId).collection('userAlerts').doc(chabi).update({
+            comments: firebase.firestore.FieldValue.arrayUnion(writeComment)
+        })
+        .then((res) => {
+            fire.firestore().collection('allAlerts').doc(chabi).update({
+                comments: firebase.firestore.FieldValue.arrayUnion(writeComment)
+               
+            })
+        })
+        .then((response) => {
                 //('Comments Successfully Added')
                 this.setState({ comment: '' })
-                fire.database().ref(`usersAlerts/${userId}/${chabi}/comments`).on('value', (snapshot) => {
-                    let snapShot = snapshot.val()
+                fire.firestore().collection('usersAlerts').doc(userId).collection('userAlerts').doc(chabi)
+                .onSnapshot(snapshot => {
+                    let data = snapshot.data().comments
 
-                    for (let i in snapShot) {
-                        commentsArr.push(snapShot[i])
-                    }
-
-                    //('-------------------->', commentsArr)
-                    commentsArr.reverse()
-                    this.setState({ commentsArr })
+                   
+                        
+                    this.setState({ commentsArr:data })
                 });
 
             })
-        })
-
     }
     render() {
-        //('commentsArr-->', this.state.commentsArr)
+        console.log('commentsArr-->', this.state.commentsArr)
         //('commentsArr-->', this.state.commentsArr.length)
 
         return this.state.fontLoaded ? (
@@ -390,9 +387,22 @@ class chatScreen extends Component {
                                         <Text style={{ color: '#5d616f', fontSize: 12, justifyContent: 'flex-start', fontFamily: 'ralewayRegular', paddingLeft: 1, paddingBottom: 4 }}>•{mark.street},{mark.city} •</Text>
                                         <Fontisto name="earth" size={13} color='#5d616f' />
                                     </View>
-                                    {mark.description.length > 0 ? <View style={{ paddingTop: 4, paddingBottom: 10 }}>
-                                        <Text style={{ fontSize: 15, paddingTop: 4, fontFamily: 'ralewayRegular', textAlign: 'justify' }}>{mark.description.length > 0 ? mark.description : '...'}</Text>
-                                    </View> : <View style={{ paddingBottom: 4 }}></View>}
+                                    {mark.description &&  mark.description.description? (
+                                        <View style={{ paddingTop: 4, paddingBottom: 10 }}>
+                                          <Text
+                                            style={{
+                                              fontSize: 15,
+                                              paddingTop: 4,
+                                              fontFamily: 'ralewayRegular',
+                                              textAlign: 'justify',
+                                            }}
+                                          >
+                                            {mark.description.description}
+                                          </Text>
+                                        </View>
+                                      ) : (
+                                        <View style={{ paddingBottom: 4 }}></View>
+                                      )}
                                 </View>
                                 <View style={styles.container}>
                                     <MapView style={{
@@ -436,7 +446,7 @@ class chatScreen extends Component {
                                     <TouchableOpacity style={{ flexDirection: 'row' }}>
 
                                         <FontAwesome name="comments" size={15} color='#5d616f' />
-                                        <Text style={{ fontSize: 15, color: '#5d616f', paddingLeft: 4, fontFamily: 'ralewayRegular', }}>{mark.comments.length} Comments</Text>
+                                        <Text style={{ fontSize: 15, color: '#5d616f', paddingLeft: 4, fontFamily: 'ralewayRegular', }}>{this.state.commentsArr.length} Comments</Text>
 
                                     </TouchableOpacity>
                                     <View>
@@ -486,22 +496,25 @@ class chatScreen extends Component {
                         ))}
                         <View style={{ paddingTop: 15, paddingBottom: 15, paddingLeft: 10, paddingRight: 10, flex: 1, backgroundColor: '#fff' }}>
                             {this.state.commentsArr.map((item, index) => (
-                                <View key={index} style={{ flexDirection: 'row', flex: 1, marginBottom: 10 }}>
-                                    <View style={{ marginRight: 4, flex: 0.5 }}>
-                                        <Image
-                                            style={{
-                                                height: 44,
-                                                width: 44,
-                                                borderRadius: 75
-                                            }}
-                                            source={{ uri: item.ProfileURL }} />
-                                    </View>
-                                    <View style={{ flex: 3, flexDirection: 'row', alignItems: 'center', marginLeft: 2, backgroundColor: '#f2f3f5', borderRadius: 30, paddingTop: 15, paddingBottom: 15, paddingLeft: 8, paddingRight: 8 }}>
-                                        <Text style={{ fontWeight: 'bold', color: '#333846', fontFamily: 'ralewayRegular', marginRight: 2 }}>{item.userName}</Text>
-                                        <Text style={{ color: '#333846', fontFamily: 'ralewayRegular', marginLeft: 1 }}>{item.comment}</Text>
-
-                                    </View>
-                                </View>))}
+                                    
+                                        <View key={index} style={{ flexDirection: 'row', flex: 1, marginBottom: 10 }}>
+                                            <View style={{ marginRight: 4, flex: 0.5 }}>
+                                                <Image
+                                                    style={{
+                                                        height: 44,
+                                                        width: 44,
+                                                        borderRadius: 75
+                                                    }}
+                                                    source={{ uri: item.ProfileURL }} />
+                                            </View>
+                                            <View style={{ flex: 3, flexDirection: 'row', alignItems: 'center', marginLeft: 2, backgroundColor: '#f2f3f5', borderRadius: 30, paddingTop: 15, paddingBottom: 15, paddingLeft: 8, paddingRight: 8 }}>
+                                                <Text style={{ fontWeight: 'bold', color: '#333846', fontFamily: 'ralewayRegular', marginRight: 2 }}>{item.userName}</Text>
+                                                <Text style={{ color: '#333846', fontFamily: 'ralewayRegular', marginLeft: 1 }}>{item.comment}</Text>
+        
+                                            </View>
+                                        </View>)
+                               
+                             )}
                         </View>
                     </ScrollView>
                 </View>
