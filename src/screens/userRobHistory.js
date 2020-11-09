@@ -253,6 +253,7 @@ class UserRobHistory extends Component {
           let userkey = d.id;
           let street = snapShot.location.regionName[0].street;
           let city = snapShot.location.regionName[0].city;
+          let name = snapShot.location.regionName[0].name;
           let ProfileURL = snapShot.ProfileURL;
           let userName = snapShot.userName;
           let createdAt = snapShot.createdAt.toDate();
@@ -271,6 +272,7 @@ class UserRobHistory extends Component {
           let crimeDetail = {
             street,
             city,
+            name,
             ProfileURL,
             userName,
             time,
@@ -455,7 +457,8 @@ class UserRobHistory extends Component {
                           paddingBottom: 4,
                         }}
                       >
-                        •{mark.street},{mark.city} •
+                        •{mark.street !== null ? mark.street : mark.name},
+                        {mark.city} •
                       </Text>
                       <Fontisto name='earth' size={13} color='#5d616f' />
                     </View>
@@ -561,8 +564,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top:'50%',
-    left:'47%'
+    top: '50%',
+    left: '47%',
   },
   container: {
     zIndex: -1, //...StyleSheet.absoluteFill,
