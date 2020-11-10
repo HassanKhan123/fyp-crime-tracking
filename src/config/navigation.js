@@ -17,7 +17,6 @@ import {
 import { Easing, Animated } from 'react-native';
 import firebase from 'firebase/app';
 
-import OfficerLoginScreen from '../screens/officerLoginScreen';
 import HomeScreen from '../screens/Home';
 import AuthScreen from '../screens/Auth';
 import CrimeInfoScreen from '../screens/Crimeinfo';
@@ -198,7 +197,6 @@ let CollapseExpand = (index, position) => {
 const HomeNavigation = createStackNavigator(
   {
     Auth: { screen: AuthScreen },
-    Officer: { screen: OfficerLoginScreen },
     CrimeInfo: { screen: MyDrawerNavigator },
   },
   {

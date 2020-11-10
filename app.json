@@ -4,7 +4,7 @@
     "slug": "Citizen",
     "privacy": "public",
     "icon":"./assets/icon_new.png",
-    "sdkVersion": "36.0.0",
+    "sdkVersion": "37.0.0",
     "platforms": [
       "ios",
       "android",

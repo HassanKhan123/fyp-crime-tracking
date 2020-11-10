@@ -10,8 +10,8 @@
   "dependencies": {
     "@expo/vector-icons": "^10.2.0",
     "@react-native-community/masked-view": "0.1.5",
-    "expo": "^34.0.1",
-    "expo-facebook": "^6.0.0",
+    "expo": "^39.0.4",
+    "expo-facebook": "^8.0.0",
     "firebase": "^7.6.1",
     "lottie-react-native": "^2.6.1",
     "moment": "^2.27.0",

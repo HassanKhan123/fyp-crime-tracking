@@ -23,6 +23,7 @@ import * as firebase from 'firebase';
 import Constants from 'expo-constants';
 import { YellowBox } from 'react-native';
 import _ from 'lodash';
+import { Google } from 'expo';
 
 YellowBox.ignoreWarnings(['Setting a timer']);
 const _console = _.clone(console);
@@ -87,67 +88,62 @@ class AuthScreen extends Component {
   }
   async loginWithFacebook() {
     this.setState({ loading: true });
-    await Facebook.initializeAsync('925470951182049');
-    const {
-      type,
-      token,
-      expires,
-      permissions,
-      declinedPermissions,
-    } = await Facebook.logInWithReadPermissionsAsync({
-      permissions: ['public_profile', 'email'],
-      // behavior: 'web'
-    });
+    let appId = '925470951182049';
+    let appName = 'Citizens';
 
-    if (type === 'success') {
-      // Build Firebase credential with the Facebook access token.
-      const credential = firebase.auth.FacebookAuthProvider.credential(token);
-      const response = await fetch(
-        `https://graph.facebook.com/me?access_token=${token}&fields=id,name,picture.type(large)`
-      );
-      const userInfo = await response.json();
-      console.log('info=======', userInfo);
+    try {
+      await Facebook.initializeAsync(appId, appName);
+      const { type, token } = await Facebook.logInWithReadPermissionsAsync({
+        permissions: ['public_profile', 'email'],
+      });
 
-      firebase
-        .auth()
-        .signInWithCredential(credential)
-        .then((res) => {
-          const userName = res.additionalUserInfo.profile.name;
-          const UserUid = res.user.uid;
-          const ProfileURL = `${res.user.photoURL}?type=large`;
+      if (type === 'success') {
+        const credential = firebase.auth.FacebookAuthProvider.credential(token);
+        const response = await fetch(
+          `https://graph.facebook.com/me?access_token=${token}&fields=id,name,picture.type(large)`
+        );
+        const userInfo = await response.json();
+        console.log('info=======', userInfo);
 
-          const deviceInfo = Constants.deviceName;
-          fire
-            .firestore()
-            .collection('Users')
-            .doc(UserUid)
-            .set({
-              userName,
-              UserId: UserUid,
-              ProfileURL,
-              userToken: token,
-              deviceInfo,
-              devices: {
+        firebase
+          .auth()
+          .signInWithCredential(credential)
+          .then((res) => {
+            const userName = res.additionalUserInfo.profile.name;
+            const UserUid = res.user.uid;
+            const ProfileURL = `${res.user.photoURL}?type=large`;
+
+            const deviceInfo = Constants.deviceName;
+            fire
+              .firestore()
+              .collection('Users')
+              .doc(UserUid)
+              .set({
+                userName,
+                UserId: UserUid,
+                ProfileURL,
+                userToken: token,
                 deviceInfo,
-                token,
-              },
-            })
-            .then(() => {
-              this.props.navigation.navigate('Home', {
-                userId: UserUid,
-                Name: userName,
-                userProfile: ProfileURL,
-                UserToken: token,
-                deviceinfo: deviceInfo,
+                devices: {
+                  deviceInfo,
+                  token,
+                },
+              })
+              .then(() => {
+                this.props.navigation.navigate('Home', {
+                  userId: UserUid,
+                  Name: userName,
+                  userProfile: ProfileURL,
+                  UserToken: token,
+                  deviceinfo: deviceInfo,
+                });
+                this.setState({ loading: false });
               });
-              this.setState({ loading: false });
-            })
-            .catch((e) => {
-              var errorMessage = error.message;
-              console.log(errorMessage);
-              this.setState({ loading: false });
-            });
-        });
+          });
+      }
+    } catch (error) {
+      console.log(error.message);
+      this.setState({ loading: false });
     }
   }
 
@@ -246,35 +242,7 @@ class AuthScreen extends Component {
                       textAlign: 'center',
                     }}
                   >
-                    Login as User
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: '#2e363d',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    color: 'white',
-                    fontSize: 18,
-                    padding: 15,
-                    width: 250,
-                    textAlign: 'çenter',
-                    marginTop: 20,
-                  }}
-                  onPress={() => this.loginAsOfficer()}
-                >
-                  <FontAwesome5 name='user-tie' size={24} color='white' />
-                  <Text
-                    style={{
-                      color: 'white',
-                      marginLeft: 10,
-                      fontFamily: 'ralewayRegular',
-                      fontSize: 18,
-                      textAlign: 'center',
-                    }}
-                  >
-                    Login as Officer
+                    Login with Facebook
                   </Text>
                 </TouchableOpacity>
               </View>

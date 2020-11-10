@@ -320,7 +320,7 @@ class HomeScreen extends Component {
           .doc(this.state.UserId)
           .set({ alltokens });
       });
-   
+
     this.setState({ expoToken: token });
   };
   async componentDidMount() {
@@ -343,7 +343,14 @@ class HomeScreen extends Component {
     await Font.loadAsync({
       ralewayRegular: require('../assets/fonts/Raleway-Regular.ttf'),
     });
-
+    console.log(
+      'aaa=========',
+      this.props.navigation.state.params.Name,
+      this.props.navigation.state.params.userId,
+      this.props.navigation.state.params.userProfile,
+      this.props.navigation.state.params.UserToken,
+      this.props.navigation.state.params.deviceinfo
+    );
     const userName = this.props.navigation.state.params.Name;
     const UserId = this.props.navigation.state.params.userId;
     const ProfileURL = this.props.navigation.state.params.userProfile;
@@ -424,7 +431,7 @@ class HomeScreen extends Component {
   };
 
   sendNotification(regionName) {
-    console.log(regionName)
+    console.log(regionName);
     // <ScreenChild navigation={this.props.navigation} />
 
     const { userName, UserId, ProfileURL, UserToken } = this.state;
@@ -447,9 +454,9 @@ class HomeScreen extends Component {
           for (var key in tokenData) {
             TokenArr.push(tokenData[key]);
           }
-          
-        })
-      }).then(() => {
+        });
+      })
+      .then(() => {
         for (let i = 0; i < TokenArr.length; i++) {
           fetch('https://exp.host/--/api/v2/push/send', {
             method: 'POST',
@@ -462,9 +469,7 @@ class HomeScreen extends Component {
               body:
                 'Criminal activity happened at - ' +
                 ' ' +
-                `${
-                  regionName[0].street || regionName[0].name
-                }` +
+                `${regionName[0].street || regionName[0].name}` +
                 ', ' +
                 regionName[0].city,
               sound: 'default',
@@ -481,9 +486,7 @@ class HomeScreen extends Component {
           ],
           { cancelable: false }
         );
-        
-      })
-    
+      });
   }
   goToCrimeInfo = () => {
     this.props.navigation.navigate('crimeInfo', {
@@ -508,21 +511,17 @@ class HomeScreen extends Component {
       .then((data) => {
         data.forEach((d) => {
           let AlertData = d.data();
-            if (
-              AlertData.location.marker_lat &&
-              AlertData.location.marker_long
-            ) {
-              let latitude = AlertData.location.marker_lat;
-              let longitude = AlertData.location.marker_long;
+          if (AlertData.location.marker_lat && AlertData.location.marker_long) {
+            let latitude = AlertData.location.marker_lat;
+            let longitude = AlertData.location.marker_long;
 
-              coordinates = {
-                latitude: latitude,
-                longitude: longitude,
-              };
-              AlertArr.push({ coordinates });
-              placemarkers.push(coordinates);
-            }
-          
+            coordinates = {
+              latitude: latitude,
+              longitude: longitude,
+            };
+            AlertArr.push({ coordinates });
+            placemarkers.push(coordinates);
+          }
         });
       })
       .then(() => {
@@ -553,7 +552,7 @@ class HomeScreen extends Component {
       UserId,
       ProfileURL,
       UserToken,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       location: {
         marker_lat,
         marker_long,
@@ -561,6 +560,11 @@ class HomeScreen extends Component {
       },
       description: '',
       comments: [],
+      acknowledged: {
+        acknowledgedStatus: false,
+        acknowledgedById: '',
+        acknowledgedByName: '',
+      },
     };
 
     fire
