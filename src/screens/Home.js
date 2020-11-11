@@ -564,6 +564,7 @@ class HomeScreen extends Component {
         acknowledgedStatus: false,
         acknowledgedById: '',
         acknowledgedByName: '',
+        acknowledgedAt: '',
       },
     };
 
