@@ -12,6 +12,7 @@ import {
   Alert,
   TouchableHighlight,
   Image,
+  Share,
 } from 'react-native';
 import {
   Icon,
@@ -500,37 +501,47 @@ class HomeScreen extends Component {
     });
     //('crimeinfoo----->')
   };
-  showCrimeMarkers = () => {
-    let AlertArr = [];
-    let placemarkers = [];
-    let coordinates = {};
-    fire
-      .firestore()
-      .collection('allAlerts')
-      .get()
-      .then((data) => {
-        data.forEach((d) => {
-          let AlertData = d.data();
-          if (AlertData.location.marker_lat && AlertData.location.marker_long) {
-            let latitude = AlertData.location.marker_lat;
-            let longitude = AlertData.location.marker_long;
+  showCrimeMarkers = async () => {
+     const result = await Share.share({
+              message: 'Crime Activity Happened',
+            });
+            if (result.action === Share.sharedAction) {
+              if (result.activityType) {
+                // shared with activity type of result.activityType
+              } else {
+                // shared
+              }
+            } else if (result.action === Share.dismissedAction) {}
+    // let AlertArr = [];
+    // let placemarkers = [];
+    // let coordinates = {};
+    // fire
+    //   .firestore()
+    //   .collection('allAlerts')
+    //   .get()
+    //   .then((data) => {
+    //     data.forEach((d) => {
+    //       let AlertData = d.data();
+    //       if (AlertData.location.marker_lat && AlertData.location.marker_long) {
+    //         let latitude = AlertData.location.marker_lat;
+    //         let longitude = AlertData.location.marker_long;
 
-            coordinates = {
-              latitude: latitude,
-              longitude: longitude,
-            };
-            AlertArr.push({ coordinates });
-            placemarkers.push(coordinates);
-          }
-        });
-      })
-      .then(() => {
-        this.setState({
-          markers: AlertArr,
-          placemarkers,
-          isModalVisible: false,
-        });
-      });
+    //         coordinates = {
+    //           latitude: latitude,
+    //           longitude: longitude,
+    //         };
+    //         AlertArr.push({ coordinates });
+    //         placemarkers.push(coordinates);
+    //       }
+    //     });
+    //   })
+    //   .then(() => {
+    //     this.setState({
+    //       markers: AlertArr,
+    //       placemarkers,
+    //       isModalVisible: false,
+    //     });
+    //   });
   };
 
   _onLongPressButton() {
@@ -567,7 +578,7 @@ class HomeScreen extends Component {
         acknowledgedAt: '',
       },
     };
-
+   
     fire
       .firestore()
       .collection('usersAlerts')
@@ -586,6 +597,8 @@ class HomeScreen extends Component {
             //("Rob information has been created");
             this.setState({ userKey: res.id });
             this.sendNotification(regionName);
+           
+              // dismiss
           });
       })
       .catch((e) => {
