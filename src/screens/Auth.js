@@ -109,9 +109,11 @@ class AuthScreen extends Component {
           .auth()
           .signInWithCredential(credential)
           .then((res) => {
+            console.log('res =========', res);
             const userName = res.additionalUserInfo.profile.name;
             const UserUid = res.user.uid;
-            const ProfileURL = `${res.user.photoURL}?type=large`;
+            // const ProfileURL = `${res.user.photoURL}?type=large`;
+            const ProfileURL = res.additionalUserInfo.profile.picture.data.url;
 
             const deviceInfo = Constants.deviceName;
             fire
